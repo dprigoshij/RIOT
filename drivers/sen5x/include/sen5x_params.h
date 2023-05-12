@@ -22,26 +22,32 @@
 #include "board.h"
 #include "sen5x.h"
 #include "sen5x_constants.h"
+#include "periph/i2c.h"
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
 /**
- * @name    Set default configuration parameters
+ * @name    Set default configuration parameters for SEN5x sensors
  * @{
  */
-#ifndef SEN5X_PARAM_PARAM1
-#define SEN5X_PARAM_PARAM1
+#ifndef SEN5X_PARAM_I2C_DEV
+#define SEN5X_PARAM_I2C_DEV         I2C_DEV(0)
+#endif
+#ifndef SEN5X_PARAM_ADDR
+#define SEN5X_PARAM_ADDR            0x69
 #endif
 
+
 #ifndef SEN5X_PARAMS
-#define SEN5X_PARAMS
+#define SEN5X_PARAMS                { .i2c_dev = SEN5X_PARAM_I2C_DEV, \
+                                      .i2c_addr = SEN5X_PARAM_ADDR }
 #endif
 /**@}*/
 
 /**
- * @brief   Configuration struct
+ * @brief   Configure SEN55/54
  */
 static const sen5x_params_t sen5x_params[] =
 {
