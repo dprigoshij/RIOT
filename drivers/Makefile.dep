@@ -170,6 +170,10 @@ ifneq (,$(filter sdp3x_%,$(USEMODULE)))
   USEMODULE += sdp3x
 endif
 
+ifneq (,$(filter sen5x_%,$(USEMODULE)))
+  USEMODULE += sen5x
+endif
+
 ifneq (,$(filter sht1%,$(USEMODULE)))
   USEMODULE += sht1x
 endif
