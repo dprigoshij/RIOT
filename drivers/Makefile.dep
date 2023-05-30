@@ -176,6 +176,10 @@ ifneq (,$(filter sdp3x_%,$(USEMODULE)))
   USEMODULE += sdp3x
 endif
 
+ifneq (,$(filter sen5x_%,$(USEMODULE)))
+  USEMODULE += sen5x
+endif
+
 ifneq (,$(filter servo_%,$(USEMODULE)))
   USEMODULE += servo
 endif
