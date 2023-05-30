@@ -33,26 +33,91 @@ extern "C" {
  * @brief   Device initialization parameters
  */
 typedef struct {
-    /* add initialization params here */
+    i2c_t i2c_dev;                  /**< I2C device which is used */
+    uint8_t i2c_addr;               /**< I2C address */
 } sen5x_params_t;
 
 /**
  * @brief   Device descriptor for the driver
  */
 typedef struct {
-    /** Device initialization parameters */
-    sen5x_params_t params;
+    sen5x_params_t params;                  /**< Device initialization parameters */
+    sen5x_measurement_t values;             /**< Meaured values */
 } sen5x_t;
+
+/**
+ * @brief   Wrapper for measured values
+ */
+typedef struct {
+    uint16_t mass_concentration_pm1p0;
+    uint16_t mass_concentration_pm2p5;
+    uint16_t mass_concentration_pm4p0;
+    uint16_t mass_concentration_pm10p0;
+    uint16_t number_concentration_pm0p5;
+    uint16_t number_concentration_pm1p0;
+    uint16_t number_concentration_pm2p5;
+    uint16_t number_concentration_pm4p0;
+    uint16_t number_concentration_pm10p0;
+    uint16_t typical_particle_size;
+    int16_t ambient_humidity;
+    int16_t ambient_temperature;
+    int16_t voc_index;
+    int16_t nox_index;
+} sen5x_measurement_t;
+
 
 /**
  * @brief   Initialize the given device
  *
  * @param[inout] dev        Device descriptor of the driver
  * @param[in]    params     Initialization parameters
- *
- * @return                  0 on success
  */
-int sen5x_init(sen5x_t *dev, const sen5x_params_t *params);
+void sen5x_init(sen5x_t *dev, const sen5x_params_t *params);
+
+/**
+ * @brief   Execute a reset on the given device
+ *
+ * @param[inout] dev        Device descriptor of the driver
+ */
+void sen5x_reset(sen5x_t *dev);
+
+/**
+ * @brief   Starts a continuous measurement
+ *
+ * @param[inout] dev        Device descriptor of the driver
+ */
+void sen5x_wake(sen5x_t *dev);
+
+/**
+ * @brief   Stops the measurement and returns to idle mode
+ *
+ * @param[inout] dev        Device descriptor of the driver
+ */
+void sen5x_sleep(sen5x_t *dev);
+
+/**
+ * @brief   Sets the fan to maximum speed, to clean it within 10 seconds
+ *
+ * @param[inout] dev        Device descriptor of the driver
+ */
+void sen5x_clean_fan(sen5x_t *dev);
+
+/**
+ * @brief   Read measured mass concentration, humidity and temperature values
+ *
+ * @param[inout] dev        Device descriptor of the driver
+ * @param[out]   values     Pointer to wrapper containing all measured values
+ */
+void sen5x_read_values(sen5x_t *dev ,sen5x_measurement_t *values);
+
+/**
+ * @brief   Read measured particle matter values
+ *
+ * @param[inout] dev        Device descriptor of the driver
+ * @param[out]   values     Pointer to wrapper containing all measured values
+ */
+void sen5x_read_pm_values(sen5x_t *dev ,sen5x_measurement_t *values);
+
 
 #ifdef __cplusplus
 }
