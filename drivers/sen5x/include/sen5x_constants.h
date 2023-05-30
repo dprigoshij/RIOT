@@ -25,6 +25,10 @@ extern "C" {
 
 /* define here the addresses, register and constants of the driver */
 
+#ifndef SEN5X_I2C_ADDRESS
+#define SEN5X_I2C_ADDRESS            (0x69)
+#endif
+
 #ifdef __cplusplus
 }
 #endif
