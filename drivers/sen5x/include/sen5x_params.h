@@ -13,7 +13,7 @@
  * @file
  * @brief       Default configuration for SEN50/54/55
  *
- * @author      Daniel Prigoshij <d.prigoshij@tu-braunschweig.de>
+ * @author      Daniel Prigoshij <prigoshi@ibr.cs.tu-bs.de>
  */
 
 #ifndef SEN5X_PARAMS_H

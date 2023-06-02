@@ -13,7 +13,7 @@
  * @file
  * @brief       Device driver implementation for the Sensirion Embedded I2C SEN5x Driver
  *
- * @author      Daniel Prigoshij <d.prigoshij@tu-braunschweig.de>
+ * @author      Daniel Prigoshij <prigoshi@ibr.cs.tu-bs.de>
  *
  * @}
  */
