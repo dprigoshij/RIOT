@@ -22,12 +22,11 @@
 #include "sen5x_params.h"
 
 static int read_mass_concentration_pm1p0(const void *dev, phydat_t *res) {
-    const sen5x_t *d = (sen5x_t *)dev;
+    sen5x_t *d = (sen5x_t *)dev;
 
-    sen5x_measurement_t *values;
-    sen5x_read_pm_values(d, values);
+    sen5x_read_pm_values(d, &d->values);
     
-    res->val[0] = (int16_t)values->mass_concentration_pm1p0;
+    res->val[0] = (int16_t)d->values.mass_concentration_pm1p0;
     res->unit   = UNIT_GPM3;
     res->scale  = -5;
 
@@ -35,12 +34,11 @@ static int read_mass_concentration_pm1p0(const void *dev, phydat_t *res) {
 }
 
 static int read_mass_concentration_pm2p5(const void *dev, phydat_t *res) {
-    const sen5x_t *d = (sen5x_t *)dev;
+    sen5x_t *d = (sen5x_t *)dev;
 
-    sen5x_measurement_t *values;
-    sen5x_read_pm_values(d, values);
+    sen5x_read_pm_values(d, &d->values);
     
-    res->val[0] = (int16_t)values->mass_concentration_pm2p5;
+    res->val[0] = (int16_t)d->values.mass_concentration_pm2p5;
     res->unit   = UNIT_GPM3;
     res->scale  = -5;
 
@@ -48,12 +46,11 @@ static int read_mass_concentration_pm2p5(const void *dev, phydat_t *res) {
 }
 
 static int read_mass_concentration_pm4p0(const void *dev, phydat_t *res) {
-    const sen5x_t *d = (sen5x_t *)dev;
+    sen5x_t *d = (sen5x_t *)dev;
 
-    sen5x_measurement_t *values;
-    sen5x_read_pm_values(d, values);
+    sen5x_read_pm_values(d, &d->values);
     
-    res->val[0] = (int16_t)values->mass_concentration_pm4p0;
+    res->val[0] = (int16_t)d->values.mass_concentration_pm4p0;
     res->unit   = UNIT_GPM3;
     res->scale  = -5;
 
@@ -61,12 +58,11 @@ static int read_mass_concentration_pm4p0(const void *dev, phydat_t *res) {
 }
 
 static int read_mass_concentration_pm10p0(const void *dev, phydat_t *res) {
-    const sen5x_t *d = (sen5x_t *)dev;
+    sen5x_t *d = (sen5x_t *)dev;
 
-    sen5x_measurement_t *values;
-    sen5x_read_pm_values(d, values);
+    sen5x_read_pm_values(d, &d->values);
     
-    res->val[0] = (int16_t)values->mass_concentration_pm10p0;
+    res->val[0] = (int16_t)d->values.mass_concentration_pm10p0;
     res->unit   = UNIT_GPM3;
     res->scale  = -5;
 
@@ -74,12 +70,11 @@ static int read_mass_concentration_pm10p0(const void *dev, phydat_t *res) {
 }
 
 static int read_number_concentration_pm0p5(const void *dev, phydat_t *res) {
-    const sen5x_t *d = (sen5x_t *)dev;
+    sen5x_t *d = (sen5x_t *)dev;
 
-    sen5x_measurement_t *values;
-    sen5x_read_pm_values(d, values);
+    sen5x_read_pm_values(d, &d->values);
 
-    res->val[0] = (int16_t)values->number_concentration_pm0p5;
+    res->val[0] = (int16_t)d->values.number_concentration_pm0p5;
     res->unit   = UNIT_CPM3;
     res->scale  = -5;
 
@@ -87,36 +82,33 @@ static int read_number_concentration_pm0p5(const void *dev, phydat_t *res) {
 }
 
 static int read_number_concentration_pm1p0(const void *dev, phydat_t *res) {
-    const sen5x_t *d = (sen5x_t *)dev;
+    sen5x_t *d = (sen5x_t *)dev;
 
-    sen5x_measurement_t *values;
-    sen5x_read_pm_values(d, values);
+    sen5x_read_pm_values(d, &d->values);
 
-    res->val[0] = (int16_t)values->number_concentration_pm1p0;
+    res->val[0] = (int16_t)d->values.number_concentration_pm1p0;
     res->unit   = UNIT_CPM3;
     res->scale  = -5;
     return 1;
 }
 
 static int read_number_concentration_pm2p5(const void *dev, phydat_t *res) {
-    const sen5x_t *d = (sen5x_t *)dev;
+    sen5x_t *d = (sen5x_t *)dev;
 
-    sen5x_measurement_t *values;
-    sen5x_read_pm_values(d, values);
+    sen5x_read_pm_values(d, &d->values);
 
-    res->val[0] = (int16_t)values->number_concentration_pm2p5;
+    res->val[0] = (int16_t)d->values.number_concentration_pm2p5;
     res->unit   = UNIT_CPM3;
     res->scale  = -5;
     return 1;
 }
 
 static int read_number_concentration_pm4p0(const void *dev, phydat_t *res) {
-    const sen5x_t *d = (sen5x_t *)dev;
+    sen5x_t *d = (sen5x_t *)dev;
 
-    sen5x_measurement_t *values;
-    sen5x_read_pm_values(d, values);
+    sen5x_read_pm_values(d, &d->values);
 
-    res->val[0] = (int16_t)values->number_concentration_pm4p0;
+    res->val[0] = (int16_t)d->values.number_concentration_pm4p0;
     res->unit   = UNIT_CPM3;
     res->scale  = -5;
 
@@ -124,12 +116,11 @@ static int read_number_concentration_pm4p0(const void *dev, phydat_t *res) {
 }
 
 static int read_number_concentration_pm10p0(const void *dev, phydat_t *res) {
-    const sen5x_t *d = (sen5x_t *)dev;
+    sen5x_t *d = (sen5x_t *)dev;
 
-    sen5x_measurement_t *values;
-    sen5x_read_pm_values(d, values);
+    sen5x_read_pm_values(d, &d->values);
 
-    res->val[0] = (int16_t)values->number_concentration_pm10p0;
+    res->val[0] = (int16_t)d->values.number_concentration_pm10p0;
     res->unit   = UNIT_CPM3;
     res->scale  = -5;
 
@@ -137,12 +128,11 @@ static int read_number_concentration_pm10p0(const void *dev, phydat_t *res) {
 }
 
 static int read_typical_particle_size(const void *dev, phydat_t *res) {
-    const sen5x_t *d = (sen5x_t *)dev;
+    sen5x_t *d = (sen5x_t *)dev;
 
-    sen5x_measurement_t *values;
-    sen5x_read_pm_values(d, values);
+    sen5x_read_pm_values(d, &d->values);
 
-    res->val[0] = (int16_t)values->typical_particle_size;
+    res->val[0] = (int16_t)d->values.typical_particle_size;
     res->unit   = UNIT_M;
     res->scale  = -3;
 
@@ -150,12 +140,11 @@ static int read_typical_particle_size(const void *dev, phydat_t *res) {
 }
 
 static int read_ambient_humidity(const void *dev, phydat_t *res) {
-    const sen5x_t *d = (sen5x_t *)dev;
+    sen5x_t *d = (sen5x_t *)dev;
 
-    sen5x_measurement_t *values;
-    sen5x_read_pm_values(d, values);
+    sen5x_read_pm_values(d, &d->values);
 
-    res->val[0] = (int16_t)values->ambient_humidity;
+    res->val[0] = (int16_t)d->values.ambient_humidity;
     res->unit   = UNIT_PERCENT;
     res->scale  = 2;
 
@@ -163,12 +152,11 @@ static int read_ambient_humidity(const void *dev, phydat_t *res) {
 }
 
 static int read_ambient_temperature(const void *dev, phydat_t *res) {
-    const sen5x_t *d = (sen5x_t *)dev;
+    sen5x_t *d = (sen5x_t *)dev;
 
-    sen5x_measurement_t *values;
-    sen5x_read_pm_values(d, values);
+    sen5x_read_pm_values(d, &d->values);
 
-    res->val[0] = ((int16_t)values->ambient_temperature) / 2;
+    res->val[0] = ((int16_t)d->values.ambient_temperature) / 2;
     res->unit   = UNIT_TEMP_C;
     res->scale  = 2;
 
@@ -237,13 +225,13 @@ const saul_driver_t sen5x_typical_particle_size_driver = {
 };
 
 const saul_driver_t sen5x_ambient_humidity_driver = {
-    .read = read_typical_particle_size,
+    .read = read_ambient_humidity,
     .write = saul_write_notsup,
     .type = SAUL_SENSE_HUM
 };
 
 const saul_driver_t sen5x_ambient_temperature_driver = {
-    .read = read_typical_particle_size,
+    .read = read_ambient_temperature,
     .write = saul_write_notsup,
     .type = SAUL_SENSE_TEMP
 };
