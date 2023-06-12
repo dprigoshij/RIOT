@@ -35,7 +35,7 @@ void sen5x_init(sen5x_t *dev, const sen5x_params_t *params)
     sen5x_reset(dev);
 }
 
-void sen5x_reset(sen5x_t *dev) {
+void sen5x_reset(const sen5x_t *dev) {
     assert(dev);
     i2c_acquire(dev->params.i2c_dev);
 
@@ -44,16 +44,18 @@ void sen5x_reset(sen5x_t *dev) {
     i2c_release(dev->params.i2c_dev);
 }
 
-void sen5x_wake(sen5x_t *dev) {
+void sen5x_wake(const sen5x_t *dev) {
     assert(dev);
     i2c_acquire(dev->params.i2c_dev);
+
+    printf("test");
 
     sen5x_start_measurement();
 
     i2c_release(dev->params.i2c_dev);
 }
 
-void sen5x_sleep(sen5x_t *dev) {
+void sen5x_sleep(const sen5x_t *dev) {
     assert(dev);
     i2c_acquire(dev->params.i2c_dev);
 
@@ -62,7 +64,7 @@ void sen5x_sleep(sen5x_t *dev) {
     i2c_release(dev->params.i2c_dev);
 }
 
-void sen5x_clean_fan(sen5x_t *dev) {
+void sen5x_clean_fan(const sen5x_t *dev) {
     assert(dev);
     i2c_acquire(dev->params.i2c_dev);
 
@@ -71,7 +73,7 @@ void sen5x_clean_fan(sen5x_t *dev) {
     i2c_release(dev->params.i2c_dev);
 }
 
-void sen5x_read_values(sen5x_t *dev ,sen5x_measurement_t *values) {
+void sen5x_read_values(const sen5x_t *dev, sen5x_measurement_t *values) {
     assert(dev && values);
     i2c_acquire(dev->params.i2c_dev);
 
@@ -84,7 +86,7 @@ void sen5x_read_values(sen5x_t *dev ,sen5x_measurement_t *values) {
     i2c_release(dev->params.i2c_dev);
 }
 
-void sen5x_read_pm_values(sen5x_t *dev ,sen5x_measurement_t *values) {
+void sen5x_read_pm_values(const sen5x_t *dev ,sen5x_measurement_t *values) {
     assert(dev && values);
     i2c_acquire(dev->params.i2c_dev);
 

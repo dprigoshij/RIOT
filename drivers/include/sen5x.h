@@ -23,27 +23,15 @@
 
 /* Add header includes here */
 
+#include "periph/i2c.h"
+#include <stdint.h>
+#include "saul.h"
+
 #ifdef __cplusplus
 extern "C" {
 #endif
 
 /* Declare the API of the driver */
-
-/**
- * @brief   Device initialization parameters
- */
-typedef struct {
-    i2c_t i2c_dev;                  /**< I2C device which is used */
-    uint8_t i2c_addr;               /**< I2C address */
-} sen5x_params_t;
-
-/**
- * @brief   Device descriptor for the driver
- */
-typedef struct {
-    sen5x_params_t params;                  /**< Device initialization parameters */
-    sen5x_measurement_t values;             /**< Meaured values */
-} sen5x_t;
 
 /**
  * @brief   Wrapper for measured values
@@ -65,6 +53,21 @@ typedef struct {
     int16_t nox_index;
 } sen5x_measurement_t;
 
+/**
+ * @brief   Device initialization parameters
+ */
+typedef struct {
+    i2c_t i2c_dev;                  /**< I2C device which is used */
+    uint8_t i2c_addr;               /**< I2C address */
+} sen5x_params_t;
+
+/**
+ * @brief   Device descriptor for the driver
+ */
+typedef struct {
+    sen5x_params_t params;                  /**< Device initialization parameters */
+    sen5x_measurement_t values;             /**< Measured values */
+} sen5x_t;
 
 /**
  * @brief   Initialize the given device
@@ -79,28 +82,28 @@ void sen5x_init(sen5x_t *dev, const sen5x_params_t *params);
  *
  * @param[inout] dev        Device descriptor of the driver
  */
-void sen5x_reset(sen5x_t *dev);
+void sen5x_reset(const sen5x_t *dev);
 
 /**
  * @brief   Starts a continuous measurement
  *
  * @param[inout] dev        Device descriptor of the driver
  */
-void sen5x_wake(sen5x_t *dev);
+void sen5x_wake(const sen5x_t *dev);
 
 /**
  * @brief   Stops the measurement and returns to idle mode
  *
  * @param[inout] dev        Device descriptor of the driver
  */
-void sen5x_sleep(sen5x_t *dev);
+void sen5x_sleep(const sen5x_t *dev);
 
 /**
  * @brief   Sets the fan to maximum speed, to clean it within 10 seconds
  *
  * @param[inout] dev        Device descriptor of the driver
  */
-void sen5x_clean_fan(sen5x_t *dev);
+void sen5x_clean_fan(const sen5x_t *dev);
 
 /**
  * @brief   Read measured mass concentration, humidity and temperature values
@@ -108,7 +111,7 @@ void sen5x_clean_fan(sen5x_t *dev);
  * @param[inout] dev        Device descriptor of the driver
  * @param[out]   values     Pointer to wrapper containing all measured values
  */
-void sen5x_read_values(sen5x_t *dev ,sen5x_measurement_t *values);
+void sen5x_read_values(const sen5x_t *dev ,sen5x_measurement_t *values);
 
 /**
  * @brief   Read measured particle matter values
@@ -116,7 +119,7 @@ void sen5x_read_values(sen5x_t *dev ,sen5x_measurement_t *values);
  * @param[inout] dev        Device descriptor of the driver
  * @param[out]   values     Pointer to wrapper containing all measured values
  */
-void sen5x_read_pm_values(sen5x_t *dev ,sen5x_measurement_t *values);
+void sen5x_read_pm_values(const sen5x_t *dev ,sen5x_measurement_t *values);
 
 
 #ifdef __cplusplus
