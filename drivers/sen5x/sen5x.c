@@ -76,10 +76,10 @@ void sen5x_read_values(const sen5x_t *dev, sen5x_measurement_t *values) {
     i2c_acquire(dev->params.i2c_dev);
 
     sen5x_read_measured_values(
-        &values->mass_concentration_pm1p0 / 10, &values->mass_concentration_pm2p5 / 10,
-        &values->mass_concentration_pm4p0 / 10, &values->mass_concentration_pm10p0 / 10,
-        &values->ambient_humidity / 100, &values->ambient_temperature / 10, &values->voc_index / 10,
-        &values->nox_index / 10);
+        &values->mass_concentration_pm1p0, &values->mass_concentration_pm2p5,
+        &values->mass_concentration_pm4p0, &values->mass_concentration_pm10p0,
+        &values->ambient_humidity, &values->ambient_temperature, &values->voc_index,
+        &values->nox_index);
 
     i2c_release(dev->params.i2c_dev);
 }
@@ -89,11 +89,11 @@ void sen5x_read_pm_values(const sen5x_t *dev ,sen5x_measurement_t *values) {
     i2c_acquire(dev->params.i2c_dev);
 
     sen5x_read_measured_pm_values(
-        &values->mass_concentration_pm1p0 / 10, &values->mass_concentration_pm2p5 / 10,
-        &values->mass_concentration_pm4p0 / 10, &values->mass_concentration_pm10p0 / 10,
-        &values->number_concentration_pm0p5 / 10, &values->number_concentration_pm1p0 / 10,
-        &values->number_concentration_pm2p5 / 10, &values->number_concentration_pm4p0 / 10,
-        &values->number_concentration_pm10p0 / 10, &values->typical_particle_size / 1000);
+        &values->mass_concentration_pm1p0, &values->mass_concentration_pm2p5,
+        &values->mass_concentration_pm4p0, &values->mass_concentration_pm10p0,
+        &values->number_concentration_pm0p5, &values->number_concentration_pm1p0,
+        &values->number_concentration_pm2p5, &values->number_concentration_pm4p0,
+        &values->number_concentration_pm10p0, &values->typical_particle_size);
 
     i2c_release(dev->params.i2c_dev);
 }
