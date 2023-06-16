@@ -9,6 +9,7 @@
 /**
  * @defgroup    drivers_sen5x Sensirion Embedded I2C SEN5x Driver
  * @ingroup     drivers_sensors
+ * @ingroup     drivers_saul
  * @brief       Driver for I2C communication to SEN5x devices.
  *
  * @{
