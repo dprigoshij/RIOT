@@ -177,7 +177,6 @@ ifneq (,$(filter sdp3x_%,$(USEMODULE)))
 endif
 
 ifneq (,$(filter sen5%,$(USEMODULE)))
-  FEATURES_REQUIRED += periph_i2c
   USEMODULE += sen5x
 endif
 
