@@ -67,7 +67,6 @@ typedef struct {
  */
 typedef struct {
     sen5x_params_t params;                  /**< Device initialization parameters */
-    sen5x_measurement_t values;             /**< Measured values */
 } sen5x_t;
 
 /**
