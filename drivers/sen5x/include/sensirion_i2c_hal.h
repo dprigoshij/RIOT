@@ -33,12 +33,9 @@
 #define SENSIRION_I2C_HAL_H
 
 #include "sensirion_config.h"
+#include "sen5x_params.h"
 #include "xtimer.h"
-#include "assert.h"
 #include "periph/i2c.h"
-#include "od.h"
-
-#define I2C_DEVICE I2C_DEV(0)
 
 #ifdef __cplusplus
 extern "C" {
