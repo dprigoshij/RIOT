@@ -111,7 +111,7 @@ void sen5x_clean_fan(const sen5x_t *dev);
  * @param[inout] dev        Device descriptor of the driver
  * @param[out]   values     Pointer to wrapper containing all measured values
  */
-void sen5x_read_values(const sen5x_t *dev ,sen5x_measurement_t *values);
+void sen5x_read_values(const sen5x_t *dev, sen5x_measurement_t *values);
 
 /**
  * @brief   Read measured particle matter values
@@ -119,7 +119,7 @@ void sen5x_read_values(const sen5x_t *dev ,sen5x_measurement_t *values);
  * @param[inout] dev        Device descriptor of the driver
  * @param[out]   values     Pointer to wrapper containing all measured values
  */
-void sen5x_read_pm_values(const sen5x_t *dev ,sen5x_measurement_t *values);
+void sen5x_read_pm_values(const sen5x_t *dev, sen5x_measurement_t *values);
 
 
 #ifdef __cplusplus
