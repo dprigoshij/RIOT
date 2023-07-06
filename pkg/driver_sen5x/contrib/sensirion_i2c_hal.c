@@ -37,7 +37,8 @@
  * Initialize all hard- and software components that are needed for the I2C
  * communication.
  */
-void sensirion_i2c_hal_init(void) {
+void sensirion_i2c_hal_init(void)
+{
 
     // initialize the bus
     i2c_init(SEN5X_PARAM_I2C_DEV);
@@ -49,7 +50,8 @@ void sensirion_i2c_hal_init(void) {
 /**
  * Release all resources initialized by sensirion_i2c_hal_init().
  */
-void sensirion_i2c_hal_free(void) {
+void sensirion_i2c_hal_free(void)
+{
     i2c_release(SEN5X_PARAM_I2C_DEV);
 }
 
@@ -63,7 +65,8 @@ void sensirion_i2c_hal_free(void) {
  * @param count   number of bytes to read from I2C and store in the buffer
  * @returns 0 on success, error code otherwise
  */
-int8_t sensirion_i2c_hal_read(uint8_t address, uint8_t* data, uint16_t count) {
+int8_t sensirion_i2c_hal_read(uint8_t address, uint8_t *data, uint16_t count)
+{
     return i2c_read_bytes(SEN5X_PARAM_I2C_DEV, address, data, count, 0);
 }
 
@@ -78,7 +81,8 @@ int8_t sensirion_i2c_hal_read(uint8_t address, uint8_t* data, uint16_t count) {
  * @param count   number of bytes to read from the buffer and send over I2C
  * @returns 0 on success, error code otherwise
  */
-int8_t sensirion_i2c_hal_write(uint8_t address, const uint8_t* data, uint16_t count) {
+int8_t sensirion_i2c_hal_write(uint8_t address, const uint8_t *data, uint16_t count)
+{
     return i2c_write_bytes(SEN5X_PARAM_I2C_DEV, address, data, count, 0);
 }
 
@@ -90,6 +94,7 @@ int8_t sensirion_i2c_hal_write(uint8_t address, const uint8_t* data, uint16_t co
  *
  * @param useconds the sleep time in microseconds
  */
-void sensirion_i2c_hal_sleep_usec(uint32_t useconds) {
+void sensirion_i2c_hal_sleep_usec(uint32_t useconds)
+{
     xtimer_usleep(useconds);
 }
