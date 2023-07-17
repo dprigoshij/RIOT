@@ -1,1 +1,1 @@
-include $(RIOTBASE)/Makefile.base
+include $(RIOTBASE)/driver_with_saul.mk

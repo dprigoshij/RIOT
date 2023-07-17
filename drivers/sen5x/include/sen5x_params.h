@@ -37,7 +37,7 @@ extern "C" {
 #define SEN5X_PARAM_I2C_DEV         I2C_DEV(0)
 #endif
 #ifndef SEN5X_PARAM_ADDR
-#define SEN5X_PARAM_ADDR            SEN5X_I2C_ADDRESS
+#define SEN5X_PARAM_ADDR            SEN5X_ADRESS_I2C
 #endif
 
 #ifndef SEN5X_PARAMS
