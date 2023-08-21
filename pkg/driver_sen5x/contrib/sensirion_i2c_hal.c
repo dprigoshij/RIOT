@@ -29,9 +29,11 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include "xtimer.h"
 #include "sensirion_i2c_hal.h"
 #include "sensirion_common.h"
 #include "sensirion_config.h"
+#include "sen5x_params.h"
 
 /**
  * Initialize all hard- and software components that are needed for the I2C
