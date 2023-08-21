@@ -7,5 +7,6 @@
 config MODULE_SEN5X
     bool "Sensirion Embedded I2C SEN5x Driver"
     depends on TEST_KCONFIG
+    select PACKAGE_DRIVER_SEN5X
     select MODULE_PERIPH_I2C
     select MODULE_XTIMER
