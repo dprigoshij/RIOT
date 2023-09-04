@@ -8,4 +8,4 @@ include $(RIOTBASE)/pkg/pkg.mk
 .PHONY: all
 
 all:
-	$(QQ)"$(MAKE)" -rm sensirion_i2c_hal.c -C $(PKG_SOURCE_DIR) -f $(CURDIR)/$(PKG_NAME).mk
+	$(QQ) "$(MAKE)" -C $(PKG_SOURCE_DIR) -f $(CURDIR)/$(PKG_NAME).mk
