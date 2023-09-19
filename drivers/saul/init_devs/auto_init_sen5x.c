@@ -69,7 +69,7 @@ void auto_init_sen5x(void)
     for (unsigned i = 0; i < SEN5X_NUM; i++) {
         LOG_DEBUG("[auto_init_saul] initializing SEN5X #%u\n", i);
 
-        if (si70xx_init(&sen5x_devs[i], &sen5x_params[i]) != 0) {
+        if (sen5x_init(&sen5x_devs[i], &sen5x_params[i]) != 0) {
             LOG_ERROR("[auto_init_saul] error initializing SEN5X #%u\n", i);
             continue;
         }

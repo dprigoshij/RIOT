@@ -74,15 +74,21 @@ typedef struct {
  *
  * @param[inout] dev        Device descriptor of the driver
  * @param[in]    params     Initialization parameters
+ * 
+ * @return 0 on success
+ * @return < 0 on error
  */
-void sen5x_init(sen5x_t *dev, const sen5x_params_t *params);
+int sen5x_init(sen5x_t *dev, const sen5x_params_t *params);
 
 /**
  * @brief   Execute a reset on the given device
  *
  * @param[inout] dev        Device descriptor of the driver
+ * 
+ * @return 0 on success
+ * @return < 0 on error
  */
-void sen5x_reset(const sen5x_t *dev);
+int sen5x_reset(const sen5x_t *dev);
 
 /**
  * @brief   Starts a continuous measurement
