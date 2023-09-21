@@ -74,6 +74,8 @@ void auto_init_sen5x(void)
             continue;
         }
 
+        sen5x_wake(&sen5x_devs[i]);
+
         /* Mass Concentration pm1p0 */
         saul_entries[(i * 12)].dev = &(sen5x_devs[i]);
         saul_entries[(i * 12)].name = sen5x_saul_info[i].name;

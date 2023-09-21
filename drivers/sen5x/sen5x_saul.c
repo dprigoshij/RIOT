@@ -29,7 +29,7 @@ static int read_mass_concentration_pm1p0(const void *dev, phydat_t *res) {
     
     res->val[0] = (int16_t)values.mass_concentration_pm1p0;
     res->unit   = UNIT_GPM3;
-    res->scale  = -5;
+    res->scale  = -7;
 
     return 1;
 }
@@ -42,7 +42,7 @@ static int read_mass_concentration_pm2p5(const void *dev, phydat_t *res) {
     
     res->val[0] = (int16_t)values.mass_concentration_pm2p5;
     res->unit   = UNIT_GPM3;
-    res->scale  = -5;
+    res->scale  = -7;
 
     return 1;
 }
@@ -55,7 +55,7 @@ static int read_mass_concentration_pm4p0(const void *dev, phydat_t *res) {
     
     res->val[0] = (int16_t)values.mass_concentration_pm4p0;
     res->unit   = UNIT_GPM3;
-    res->scale  = -5;
+    res->scale  = -7;
 
     return 1;
 }
@@ -68,7 +68,7 @@ static int read_mass_concentration_pm10p0(const void *dev, phydat_t *res) {
     
     res->val[0] = (int16_t)values.mass_concentration_pm10p0;
     res->unit   = UNIT_GPM3;
-    res->scale  = -5;
+    res->scale  = -7;
 
     return 1;
 }
@@ -81,7 +81,7 @@ static int read_number_concentration_pm0p5(const void *dev, phydat_t *res) {
 
     res->val[0] = (int16_t)values.number_concentration_pm0p5;
     res->unit   = UNIT_CPM3;
-    res->scale  = -5;
+    res->scale  = -7;
 
     return 1;
 }
@@ -94,7 +94,7 @@ static int read_number_concentration_pm1p0(const void *dev, phydat_t *res) {
 
     res->val[0] = (int16_t)values.number_concentration_pm1p0;
     res->unit   = UNIT_CPM3;
-    res->scale  = -5;
+    res->scale  = -7;
     return 1;
 }
 
@@ -106,7 +106,7 @@ static int read_number_concentration_pm2p5(const void *dev, phydat_t *res) {
 
     res->val[0] = (int16_t)values.number_concentration_pm2p5;
     res->unit   = UNIT_CPM3;
-    res->scale  = -5;
+    res->scale  = -7;
     return 1;
 }
 
@@ -118,7 +118,7 @@ static int read_number_concentration_pm4p0(const void *dev, phydat_t *res) {
 
     res->val[0] = (int16_t)values.number_concentration_pm4p0;
     res->unit   = UNIT_CPM3;
-    res->scale  = -5;
+    res->scale  = -7;
 
     return 1;
 }
@@ -131,7 +131,7 @@ static int read_number_concentration_pm10p0(const void *dev, phydat_t *res) {
 
     res->val[0] = (int16_t)values.number_concentration_pm10p0;
     res->unit   = UNIT_CPM3;
-    res->scale  = -5;
+    res->scale  = -7;
 
     return 1;
 }
@@ -153,11 +153,11 @@ static int read_ambient_humidity(const void *dev, phydat_t *res) {
     sen5x_t *d = (sen5x_t *)dev;
     sen5x_measurement_t values;
 
-    sen5x_read_pm_values(d, &values);
+    sen5x_read_values(d, &values);
 
     res->val[0] = (int16_t)values.ambient_humidity;
     res->unit   = UNIT_PERCENT;
-    res->scale  = 2;
+    res->scale  = -2;
 
     return 1;
 }
@@ -166,11 +166,11 @@ static int read_ambient_temperature(const void *dev, phydat_t *res) {
     sen5x_t *d = (sen5x_t *)dev;
     sen5x_measurement_t values;
 
-    sen5x_read_pm_values(d, &values);
+    sen5x_read_values(d, &values);
 
     res->val[0] = ((int16_t)values.ambient_temperature) / 2;
     res->unit   = UNIT_TEMP_C;
-    res->scale  = 2;
+    res->scale  = -2;
 
     return 1;
 }
