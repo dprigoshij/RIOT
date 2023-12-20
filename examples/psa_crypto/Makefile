@@ -48,6 +48,8 @@ else
     CFLAGS += -DCONFIG_PSA_SINGLE_KEY_COUNT=1
     USEMODULE += psa_secure_element
     USEMODULE += psa_secure_element_ateccx08a
+    USEMODULE += psa_secure_element_ateccx08a_cipher_aes_128
+    USEMODULE += psa_secure_element_ateccx08a_hmac_sha256
     USEMODULE += psa_secure_element_ateccx08a_ecc_p256
   else ifeq (2, $(SECURE_ELEMENT))
     CFLAGS += -DSECURE_ELEMENT # Application specific (not needed by PSA)
@@ -60,10 +62,12 @@ else
     USEMODULE += psa_secure_element
     USEMODULE += psa_secure_element_multiple
     USEMODULE += psa_secure_element_ateccx08a
+    USEMODULE += psa_secure_element_ateccx08a_cipher_aes_128
+    USEMODULE += psa_secure_element_ateccx08a_hmac_sha256
     USEMODULE += psa_secure_element_ateccx08a_ecc_p256
   else ifdef CUSTOM_BACKEND
     # Necessary configuration when using Make dependency resolution
-    # This first part chooses the operation. If nothing else es specified,
+    # This first part chooses the operation. If nothing else is specified,
     # a default backend is built depending on the platform capabilities.
     USEMODULE += psa_cipher
     USEMODULE += psa_cipher_aes_128_cbc
@@ -73,6 +77,7 @@ else
 
     USEMODULE += psa_asymmetric
     USEMODULE += psa_asymmetric_ecc_p256r1
+    USEMODULE += psa_asymmetric_ecc_ed25519
 
     # If you want to use a custom backend, you need to do it this way.
     USEMODULE += psa_cipher_aes_128_cbc_custom_backend
@@ -86,6 +91,9 @@ else
 
     USEMODULE += psa_asymmetric_ecc_p256r1_custom_backend
     USEMODULE += psa_asymmetric_ecc_p256r1_backend_microecc # force custom backend
+
+    USEMODULE += psa_asymmetric_ecc_ed25519_custom_backend
+    USEMODULE += psa_asymmetric_ecc_ed25519_backend_c25519 # force custom backend
   else
     # Necessary configuration when using Make dependency resolution
     # This part only chooses the operation. If nothing else es specified,
@@ -98,11 +106,12 @@ else
 
     USEMODULE += psa_asymmetric
     USEMODULE += psa_asymmetric_ecc_p256r1
+    USEMODULE += psa_asymmetric_ecc_ed25519
   endif
 
   ifndef SECURE_ELEMENT
-    CFLAGS += -DCONFIG_PSA_ASYMMETRIC_KEYPAIR_COUNT=1
-    CFLAGS += -DCONFIG_PSA_SINGLE_KEY_COUNT=3
+    CFLAGS += -DCONFIG_PSA_ASYMMETRIC_KEYPAIR_COUNT=2
+    CFLAGS += -DCONFIG_PSA_SINGLE_KEY_COUNT=4
   endif
 endif
 

@@ -22,8 +22,18 @@
  * @ref lcd_params_t::cntrl or as macro @ref ST77XX_PARAM_CNTRL if the
  * default parameter set @ref ST77XX_PARAMS is used.
  *
- * The driver uses the SPI serial interface to communicate with the display
- * controller.
+ * The driver communicates with the device either via an
+ *
+ * - SPI serial interface (if module `lcd_spi` enabled) or an
+ * - MCU 8080 8-/16-bit parallel interface (if module `lcd_parallel` or
+ *   module `lcd_parallel_16` is enabled).
+ *
+ * Usually the device driver is used either for a single display with SPI serial
+ * interface or for a display with parallel MCU 8080 8-/16-bit parallel
+ * interface. However, the device driver can also be used simultaneously for
+ * multiple displays with different interfaces if several of the `lcd_spi`,
+ * `lcd_parallel` and `lcd_parallel_16bit` modules are enabled at the same time.
+ * In this case, please refer to the notes in @ref lcd_params_t.
  *
  * The device requires colors to be send in big endian RGB-565 format. The
  * @ref CONFIG_LCD_LE_MODE compile time option can switch this, but only use this
@@ -322,6 +332,34 @@ extern "C" {
 
 /**
  * @name    ST77xx display rotation modes
+ *
+ * @note Using a rotation mode may require the definition of
+ *       @ref ST77XX_PARAM_OFFSET_X or @ref ST77XX_PARAM_OFFSET_Y.
+ *
+ * Usually the dimension of an LCD is defined by W x H (width x height) in
+ * pixels, where width is the smaller dimension than height, e.g. 240 x 320
+ * (W x H). The height is then used as parameter @ref ST77XX_PARAM_NUM_LINES
+ * and the width as parameter @ref ST77XX_PARAM_RGB_CHANNELS. So vertical
+ * orientation means no rotation. Vertical orientation is given when the
+ * connector is shown at the bottom of the display.
+ *
+ * For example, the ST7789 controller supports 320 gate outputs and 240 source
+ * outputs (RGB channels). A display with a size of 240 x 320 (W x H) pixels
+ * can be used by setting `ST77XX_PARAM_NUM_LINES=320` and
+ * `ST77XX_PARAM_RGB_CHANNELS=240`.
+ *
+ * However, if the ST7789 is used with a display of 240 x 240 (W x H) pixels
+ * and a rotation is used, an offset must be defined for X or Y because the
+ * origin of the image will change. For example, in the case of
+ * @ref ST77XX_ROTATION_90 an offset for X would have to be defined by
+ * `ST77XX_PARAM_OFFSET_X=80` and in the case of @ref ST77XX_ROTATION_180
+ * an offset for Y would have to be defined by `ST77XX_PARAM_OFFSET_X=80`.
+ *
+ * Using the correct offset on rotation can be even more difficult if the
+ * display size in both dimensions is smaller than the size supported by
+ * the controller. In this case, the origin can deviate from 0, 0 even
+ * without rotation.
+ *
  * @{
  */
 #define ST77XX_ROTATION_VERT            0                   /**< Vertical mode */
@@ -331,6 +369,14 @@ extern "C" {
                                         LCD_MADCTL_MX       /**< Horizontal mode */
 #define ST77XX_ROTATION_HORZ_FLIP       LCD_MADCTL_MV | \
                                         LCD_MADCTL_MY       /**< Horizontal flipped */
+
+#define ST77XX_ROTATION_0               0                   /**< 0 deg counterclockwise */
+#define ST77XX_ROTATION_90              LCD_MADCTL_MV | \
+                                        LCD_MADCTL_MY       /**< 90 deg counterclockwise */
+#define ST77XX_ROTATION_180             LCD_MADCTL_MX | \
+                                        LCD_MADCTL_MY       /**< 180 deg counterclockwise */
+#define ST77XX_ROTATION_270             LCD_MADCTL_MV | \
+                                        LCD_MADCTL_MX       /**< 270 deg counterclockwise */
 /** @} */
 
 /**

@@ -20,9 +20,13 @@
 
 #include <stdio.h>
 #include "psa/crypto.h"
+
+#if IS_USED(MODULE_PSA_KEY_MANAGEMENT)
+#include "psa_crypto_slot_management.h"
+#endif
+
 #include "psa_crypto_se_driver.h"
 #include "psa_crypto_se_management.h"
-#include "psa_crypto_slot_management.h"
 #include "psa_crypto_location_dispatch.h"
 #include "psa_crypto_algorithm_dispatch.h"
 
@@ -38,6 +42,7 @@
  */
 static uint8_t lib_initialized = 0;
 
+#if IS_USED(MODULE_PSA_HASH)
 /**
  * @brief   Compares the content of two same-sized buffers while maintaining
  *          constant processing time
@@ -60,6 +65,7 @@ static inline int constant_time_memcmp(const uint8_t *a, const uint8_t *b, size_
 
     return diff;
 }
+#endif /* MODULE_PSA_HASH */
 
 const char *psa_status_to_humanly_readable(psa_status_t status)
 {
@@ -113,6 +119,10 @@ const char *psa_status_to_humanly_readable(psa_status_t status)
 
 psa_status_t psa_crypto_init(void)
 {
+    if (lib_initialized) {
+        return PSA_SUCCESS;
+    }
+
     lib_initialized = 1;
 
 #if (IS_USED(MODULE_PSA_KEY_SLOT_MGMT))
@@ -122,6 +132,7 @@ psa_status_t psa_crypto_init(void)
     return PSA_SUCCESS;
 }
 
+#if IS_USED(MODULE_PSA_AEAD)
 psa_status_t psa_aead_abort(psa_aead_operation_t *operation)
 {
     (void)operation;
@@ -291,7 +302,9 @@ psa_status_t psa_aead_verify(   psa_aead_operation_t *operation,
     (void)tag_length;
     return PSA_ERROR_NOT_SUPPORTED;
 }
+#endif /* MODULE_PSA_AEAD */
 
+#if IS_USED(MODULE_PSA_ASYMMETRIC)
 psa_status_t psa_asymmetric_decrypt(psa_key_id_t key,
                                     psa_algorithm_t alg,
                                     const uint8_t *input,
@@ -335,7 +348,9 @@ psa_status_t psa_asymmetric_encrypt(psa_key_id_t key,
     (void)output_length;
     return PSA_ERROR_NOT_SUPPORTED;
 }
+#endif /* MODULE_PSA_ASYMMETRIC */
 
+#if IS_USED(MODULE_PSA_KEY_MANAGEMENT)
 /**
  * @brief   Checks whether a key's policy permits the usage of a given algorithm
  *
@@ -414,7 +429,9 @@ static psa_status_t psa_get_and_lock_key_slot_with_policy(  psa_key_id_t id,
     }
     return PSA_SUCCESS;
 }
+#endif /* MODULE_PSA_KEY_MANAGEMENT */
 
+#if IS_USED(MODULE_PSA_CIPHER)
 psa_status_t psa_cipher_abort(psa_cipher_operation_t *operation)
 {
     if (!lib_initialized) {
@@ -690,6 +707,9 @@ psa_status_t psa_cipher_update(psa_cipher_operation_t *operation,
     return PSA_ERROR_NOT_SUPPORTED;
 }
 
+#endif /* MODULE_PSA_CIPHER */
+
+#if IS_USED(MODULE_PSA_HASH)
 psa_status_t psa_hash_setup(psa_hash_operation_t *operation,
                             psa_algorithm_t alg)
 {
@@ -917,8 +937,36 @@ psa_status_t psa_hash_compute(psa_algorithm_t alg,
 
     return PSA_SUCCESS;
 }
+#endif /* MODULE_PSA_HASH */
+
+psa_status_t psa_builtin_generate_random(uint8_t *output,
+                                         size_t output_size)
+{
+    if (!output) {
+        return PSA_ERROR_INVALID_ARGUMENT;
+    }
+
+    /* TODO: Should point to a CSPRNG API in the future */
+    random_bytes(output, output_size);
+    return PSA_SUCCESS;
+}
+
+psa_status_t psa_generate_random(uint8_t *output,
+                                 size_t output_size)
+{
+    if (!lib_initialized) {
+        return PSA_ERROR_BAD_STATE;
+    }
+
+    if (!output) {
+        return PSA_ERROR_INVALID_ARGUMENT;
+    }
+
+    return psa_location_dispatch_generate_random(output, output_size);
+}
 
 /* Key Management */
+#if IS_USED(MODULE_PSA_KEY_MANAGEMENT)
 /**
  * @brief   Check whether the key policy is valid
  *
@@ -990,9 +1038,9 @@ static psa_status_t psa_validate_key_for_key_generation(psa_key_type_t type, siz
     if (PSA_KEY_TYPE_IS_UNSTRUCTURED(type)) {
         return psa_validate_unstructured_key_size(type, bits);
     }
-#if IS_USED(MODULE_PSA_ASYMMETRIC) || IS_USED(MODULE_PSA_SECURE_ELEMENT_ASYMMETRIC)
+#if IS_USED(MODULE_PSA_ASYMMETRIC)
     else if (PSA_KEY_TYPE_IS_ECC_KEY_PAIR(type)) {
-        return PSA_ECC_KEY_SIZE_IS_VALID(bits) ? PSA_SUCCESS : PSA_ERROR_INVALID_ARGUMENT;
+        return PSA_ECC_KEY_SIZE_IS_VALID(type, bits) ? PSA_SUCCESS : PSA_ERROR_INVALID_ARGUMENT;
     }
 #endif
     /* TODO: add validation for other key types */
@@ -1329,8 +1377,6 @@ psa_status_t psa_generate_key(const psa_key_attributes_t *attributes,
         if (status != PSA_SUCCESS) {
             return status;
         }
-
-        slot->key.data_len = PSA_MAX_KEY_DATA_SIZE;
     }
 
     status = psa_location_dispatch_generate_key(attributes, slot);
@@ -1347,32 +1393,6 @@ psa_status_t psa_generate_key(const psa_key_attributes_t *attributes,
     }
 
     return status;
-}
-
-psa_status_t psa_builtin_generate_random(   uint8_t *output,
-                                            size_t output_size)
-{
-    if (!output) {
-        return PSA_ERROR_INVALID_ARGUMENT;
-    }
-
-    /* TODO: Should point to a CSPRNG API in the future */
-    random_bytes(output, output_size);
-    return PSA_SUCCESS;
-}
-
-psa_status_t psa_generate_random(uint8_t *output,
-                                 size_t output_size)
-{
-    if (!lib_initialized) {
-        return PSA_ERROR_BAD_STATE;
-    }
-
-    if (!output) {
-        return PSA_ERROR_INVALID_ARGUMENT;
-    }
-
-    return psa_location_dispatch_generate_random(output, output_size);
 }
 
 psa_status_t psa_get_key_attributes(psa_key_id_t key,
@@ -1498,7 +1518,9 @@ psa_status_t psa_import_key(const psa_key_attributes_t *attributes,
 
     return status;
 }
+#endif /* MODULE_PSA_KEY_MANAGEMENT */
 
+#if IS_USED(MODULE_PSA_KEY_DERIVATION)
 psa_status_t psa_key_derivation_abort(psa_key_derivation_operation_t *operation)
 {
     (void)operation;
@@ -1584,7 +1606,9 @@ psa_status_t psa_key_derivation_setup(psa_key_derivation_operation_t *operation,
     (void)alg;
     return PSA_ERROR_NOT_SUPPORTED;
 }
+#endif /* MODULE_PSA_KEY_DERIVATION */
 
+#if IS_USED(MODULE_PSA_MAC)
 psa_status_t psa_mac_abort(psa_mac_operation_t *operation)
 {
     if (!lib_initialized) {
@@ -1761,7 +1785,9 @@ psa_status_t psa_purge_key(psa_key_id_t key)
     (void)key;
     return PSA_ERROR_NOT_SUPPORTED;
 }
+#endif /* MODULE_PSA_MAC */
 
+#if IS_USED(MODULE_PSA_KEY_AGREEMENT)
 psa_status_t psa_raw_key_agreement(psa_algorithm_t alg,
                                    psa_key_id_t private_key,
                                    const uint8_t *peer_key,
@@ -1779,7 +1805,9 @@ psa_status_t psa_raw_key_agreement(psa_algorithm_t alg,
     (void)output_length;
     return PSA_ERROR_NOT_SUPPORTED;
 }
+#endif /* MODULE_PSA_KEY_AGREEMENT */
 
+#if IS_USED(MODULE_PSA_ASYMMETRIC)
 psa_status_t psa_sign_hash(psa_key_id_t key,
                            psa_algorithm_t alg,
                            const uint8_t *hash,
@@ -1804,7 +1832,7 @@ psa_status_t psa_sign_hash(psa_key_id_t key,
         return PSA_ERROR_NOT_SUPPORTED;
     }
 
-    if (hash_length != PSA_HASH_LENGTH(alg)) {
+    if (!PSA_ALG_IS_SIGN_HASH(alg) || hash_length != PSA_HASH_LENGTH(alg)) {
         return PSA_ERROR_INVALID_ARGUMENT;
     }
 
@@ -1814,7 +1842,7 @@ psa_status_t psa_sign_hash(psa_key_id_t key,
         return status;
     }
 
-    if (signature_size < PSA_SIGN_OUTPUT_SIZE(slot->attr.type, slot->attr.bits, alg)) {
+    if (signature_size < PSA_ECDSA_SIGNATURE_SIZE(PSA_ECC_KEY_GET_CURVE(slot->attr.type, slot->attr.bits))) {
         return PSA_ERROR_BUFFER_TOO_SMALL;
     }
 
@@ -1840,14 +1868,49 @@ psa_status_t psa_sign_message(psa_key_id_t key,
                               size_t signature_size,
                               size_t *signature_length)
 {
-    (void)key;
-    (void)alg;
-    (void)input;
-    (void)input_length;
-    (void)signature;
-    (void)signature_size;
-    (void)signature_length;
-    return PSA_ERROR_NOT_SUPPORTED;
+
+    psa_status_t status = PSA_ERROR_CORRUPTION_DETECTED;
+    psa_status_t unlock_status = PSA_ERROR_CORRUPTION_DETECTED;
+    psa_key_slot_t *slot;
+
+    if (!lib_initialized) {
+        return PSA_ERROR_BAD_STATE;
+    }
+
+    if (!input || !signature || !signature_length) {
+        return PSA_ERROR_INVALID_ARGUMENT;
+    }
+
+    if (!PSA_ALG_IS_ECDSA(alg)) {
+        return PSA_ERROR_NOT_SUPPORTED;
+    }
+
+    if (!PSA_ALG_IS_SIGN_MESSAGE(alg)) {
+        return PSA_ERROR_INVALID_ARGUMENT;
+    }
+
+    status = psa_get_and_lock_key_slot_with_policy(key, &slot, PSA_KEY_USAGE_SIGN_MESSAGE, alg);
+    if (status != PSA_SUCCESS) {
+        unlock_status = psa_unlock_key_slot(slot);
+        return status;
+    }
+
+    if (signature_size < PSA_ECDSA_SIGNATURE_SIZE(PSA_ECC_KEY_GET_CURVE(slot->attr.type, slot->attr.bits))) {
+        return PSA_ERROR_BUFFER_TOO_SMALL;
+    }
+
+    if (!PSA_KEY_TYPE_IS_KEY_PAIR(slot->attr.type)) {
+        unlock_status = psa_unlock_key_slot(slot);
+        return PSA_ERROR_INVALID_ARGUMENT;
+    }
+
+    psa_key_attributes_t attributes = slot->attr;
+
+    status = psa_location_dispatch_sign_message(&attributes, alg, slot, input, input_length, signature,
+                                             signature_size, signature_length);
+
+    unlock_status = psa_unlock_key_slot(slot);
+    return ((status == PSA_SUCCESS) ? unlock_status : status);
 }
 
 psa_status_t psa_verify_hash(psa_key_id_t key,
@@ -1873,7 +1936,7 @@ psa_status_t psa_verify_hash(psa_key_id_t key,
         return PSA_ERROR_NOT_SUPPORTED;
     }
 
-    if (hash_length != PSA_HASH_LENGTH(alg)) {
+    if (!PSA_ALG_IS_SIGN_HASH(alg) || hash_length != PSA_HASH_LENGTH(alg)) {
         return PSA_ERROR_INVALID_ARGUMENT;
     }
 
@@ -1883,14 +1946,7 @@ psa_status_t psa_verify_hash(psa_key_id_t key,
         return status;
     }
 
-    /**
-     * An ECC public key has the size `curve_bytes * 2 + 1`.
-     * So to get the curve size to determine the required signature
-     * size, we need to revert that calculation.
-     */
-    uint16_t curve_size = PSA_BYTES_TO_BITS(PSA_BITS_TO_BYTES(slot->attr.bits / 2) - 1);
-
-    if (signature_length != PSA_ECDSA_SIGNATURE_SIZE(curve_size)) {
+    if (signature_length != PSA_ECDSA_SIGNATURE_SIZE(PSA_ECC_KEY_GET_CURVE(slot->attr.type, slot->attr.bits))) {
         return PSA_ERROR_INVALID_ARGUMENT;
     }
 
@@ -1921,11 +1977,53 @@ psa_status_t psa_verify_message(psa_key_id_t key,
                                 const uint8_t *signature,
                                 size_t signature_length)
 {
-    (void)key;
-    (void)alg;
-    (void)input;
-    (void)input_length;
-    (void)signature;
-    (void)signature_length;
-    return PSA_ERROR_NOT_SUPPORTED;
+    psa_status_t status = PSA_ERROR_CORRUPTION_DETECTED;
+    psa_status_t unlock_status = PSA_ERROR_CORRUPTION_DETECTED;
+    psa_key_slot_t *slot;
+
+    if (!lib_initialized) {
+        return PSA_ERROR_BAD_STATE;
+    }
+
+    if (!input || !signature) {
+        return PSA_ERROR_INVALID_ARGUMENT;
+    }
+
+    if (!PSA_ALG_IS_ECDSA(alg)) {
+        return PSA_ERROR_NOT_SUPPORTED;
+    }
+
+    if (!PSA_ALG_IS_SIGN_MESSAGE(alg)) {
+        return PSA_ERROR_INVALID_ARGUMENT;
+    }
+
+    status = psa_get_and_lock_key_slot_with_policy(key, &slot, PSA_KEY_USAGE_VERIFY_MESSAGE, alg);
+    if (status != PSA_SUCCESS) {
+        unlock_status = psa_unlock_key_slot(slot);
+        return status;
+    }
+
+    if (signature_length != PSA_ECDSA_SIGNATURE_SIZE(PSA_ECC_KEY_GET_CURVE(slot->attr.type, slot->attr.bits))) {
+        return PSA_ERROR_INVALID_ARGUMENT;
+    }
+
+    /**
+     * When key location is a secure element, this implementation only supports
+     * the use of public keys stored on the secure element, not key pairs in
+     * which the public key is stored locally.
+     */
+    if ((PSA_KEY_LIFETIME_GET_LOCATION(slot->attr.lifetime) != PSA_KEY_LOCATION_LOCAL_STORAGE) &&
+        PSA_KEY_TYPE_IS_ECC_KEY_PAIR(slot->attr.type)) {
+        unlock_status = psa_unlock_key_slot(slot);
+        return PSA_ERROR_NOT_SUPPORTED;
+    }
+
+    psa_key_attributes_t attributes = slot->attr;
+
+    status = psa_location_dispatch_verify_message(&attributes, alg, slot, input, input_length, signature,
+                                               signature_length);
+
+    unlock_status = psa_unlock_key_slot(slot);
+    return ((status == PSA_SUCCESS) ? unlock_status : status);
 }
+#endif /* MODULE_PSA_ASYMMETRIC */

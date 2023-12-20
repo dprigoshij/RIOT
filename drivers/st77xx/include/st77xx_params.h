@@ -137,14 +137,73 @@ extern "C" {
 #define ST77XX_PARAM_OFFSET_Y       0               /**< Vertival offset */
 #endif
 
+#if MODULE_LCD_SPI || DOXYGEN
+/** Default interface params if SPI serial interface is enabled */
+#define ST77XX_PARAM_IF_SPI         .spi = ST77XX_PARAM_SPI, \
+                                    .spi_clk = ST77XX_PARAM_SPI_CLK, \
+                                    .spi_mode = ST77XX_PARAM_SPI_MODE,
+#else
+#define ST77XX_PARAM_IF_SPI
+#endif
+
+#if MODULE_LCD_PARALLEL || DOXYGEN
+/** Default interface params if MCU 8080 8-bit parallel interface is enabled */
+#define ST77XX_PARAM_IF_PAR         .d0_pin = ST77XX_PARAM_D0, \
+                                    .d1_pin = ST77XX_PARAM_D1, \
+                                    .d2_pin = ST77XX_PARAM_D2, \
+                                    .d3_pin = ST77XX_PARAM_D3, \
+                                    .d4_pin = ST77XX_PARAM_D4, \
+                                    .d5_pin = ST77XX_PARAM_D5, \
+                                    .d6_pin = ST77XX_PARAM_D6, \
+                                    .d7_pin = ST77XX_PARAM_D7, \
+                                    .wrx_pin = ST77XX_PARAM_WRX, \
+                                    .rdx_pin = ST77XX_PARAM_RDX,
+#else
+#define ST77XX_PARAM_IF_PAR
+#endif
+
+#if MODULE_LCD_PARALLEL_16BIT || DOXYGEN
+/** Additional default interface params if MCU 8080 16-bit parallel interface is enabled */
+#define ST77XX_PARAM_IF_PAR_16BIT   .d8_pin = ST77XX_PARAM_D8, \
+                                    .d9_pin = ST77XX_PARAM_D9, \
+                                    .d10_pin = ST77XX_PARAM_D10, \
+                                    .d11_pin = ST77XX_PARAM_D11, \
+                                    .d12_pin = ST77XX_PARAM_D12, \
+                                    .d13_pin = ST77XX_PARAM_D13, \
+                                    .d14_pin = ST77XX_PARAM_D14, \
+                                    .d15_pin = ST77XX_PARAM_D15,
+#else
+#define ST77XX_PARAM_IF_PAR_16BIT
+#endif
+
+#if MODULE_LCD_PARALLEL_16BIT || DOXYGEN
+/** Interface mode is MCU 8080 16-bit parallel */
+#define ST77XX_PARAM_IF_MODE        .mode = LCD_IF_PARALLEL_16BIT,
+#elif MODULE_LCD_PARALLEL
+/** Interface mode is MCU 8080 8-bit parallel */
+#define ST77XX_PARAM_IF_MODE        .mode = LCD_IF_PARALLEL_8BIT,
+#else
+/** Interface mode parameter is not defined */
+#define ST77XX_PARAM_IF_MODE
+#endif
+
 /**
  * @brief   Default params
+ *
+ * @note The default parameter set defined here can only be used if a single
+ *       ST77xx display and only one interface mode is used. If multiple
+ *       ST77xx displays are used or if multiple interface modes are enabled
+ *       by the modules `lcd_spi`, lcd_parallel and `lcd_parallel_16bit`, a user
+ *       defined parameter set @ref ST77XX_PARAMS has to be defined. In the
+ *       latter case @ref lcd_params_t::spi must then be set to @ref SPI_UNDEF
+ *       for displays with MCU 8080 8-/16-bit parallel interfaces.
  */
 #ifndef ST77XX_PARAMS
-#define ST77XX_PARAMS              {  .cntrl = ST77XX_PARAM_CNTRL, \
-                                      .spi = ST77XX_PARAM_SPI, \
-                                      .spi_clk = ST77XX_PARAM_SPI_CLK, \
-                                      .spi_mode = ST77XX_PARAM_SPI_MODE, \
+#define ST77XX_PARAMS              {  ST77XX_PARAM_IF_MODE \
+                                      ST77XX_PARAM_IF_SPI \
+                                      ST77XX_PARAM_IF_PAR \
+                                      ST77XX_PARAM_IF_PAR_16BIT \
+                                      .cntrl = ST77XX_PARAM_CNTRL, \
                                       .cs_pin = ST77XX_PARAM_CS, \
                                       .dcx_pin = ST77XX_PARAM_DCX, \
                                       .rst_pin = ST77XX_PARAM_RST, \
@@ -156,7 +215,7 @@ extern "C" {
                                       .offset_x = ST77XX_PARAM_OFFSET_X, \
                                       .offset_y = ST77XX_PARAM_OFFSET_Y, \
                                     }
-#endif
+#endif /* ST77XX_PARAMS */
 /** @} */
 
 /**

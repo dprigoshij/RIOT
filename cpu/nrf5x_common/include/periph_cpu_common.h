@@ -66,9 +66,9 @@ extern "C" {
  * The port definition is used (and zeroed) to suppress compiler warnings
  */
 #if GPIO_COUNT > 1
-#define GPIO_PIN(x,y)       ((x << 5) | y)
+#define GPIO_PIN(x, y)      ((x << 5) | y)
 #else
-#define GPIO_PIN(x,y)       ((x & 0) | y)
+#define GPIO_PIN(x, y)      ((x & 0) | y)
 #endif
 
 /**
@@ -257,6 +257,16 @@ typedef struct {
  */
 #define PERIPH_TIMER_PROVIDES_SET   1
 
+/**
+ * @brief   Maximum number of channels
+ *
+ * @note    NRF_TIMER1 and NRF_TIMER2 only have 4 hardware channels (and 3 of
+ *          of them are available to the application, as one has to be used
+ *          to implement timer_read()). Use @ref timer_query_channel_numof to
+ *          check the actual number of supported channels for a given timer.
+ */
+#define TIMER_CHANNEL_NUMOF 5
+
 #ifndef DOXYGEN
 /**
  * @brief   Override SPI mode values
@@ -316,13 +326,16 @@ typedef struct {
  */
 uint8_t gpio_int_get_exti(gpio_t pin);
 
-#if !defined(CPU_MODEL_NRF52832XXAA) && !defined(CPU_FAM_NRF51)
 /**
  * @brief   Structure for UART configuration data
  */
 typedef struct {
+#ifdef UARTE_PRESENT
     NRF_UARTE_Type *dev;    /**< UART with EasyDMA device base
                              * register address */
+#else
+    NRF_UART_Type *dev;     /**< UART device base register address */
+#endif
     gpio_t rx_pin;          /**< RX pin */
     gpio_t tx_pin;          /**< TX pin */
 #ifdef MODULE_PERIPH_UART_HW_FC
@@ -338,8 +351,6 @@ typedef struct {
 #ifndef UART_TXBUF_SIZE
 #define UART_TXBUF_SIZE    (64)
 #endif
-
-#endif /* ndef CPU_MODEL_NRF52832XXAA && ndef CPU_FAM_NRF51 */
 
 /**
  * @brief USBDEV buffers must be word aligned because of DMA restrictions
@@ -407,9 +418,6 @@ typedef struct {
 #define SPI_SCKSEL          (dev(bus)->PSEL.SCK)    /**< Macro for SPI clk */
 #define SPI_MOSISEL         (dev(bus)->PSEL.MOSI)   /**< Macro for SPI mosi */
 #define SPI_MISOSEL         (dev(bus)->PSEL.MISO)   /**< Macro for SPI miso */
-#ifdef CPU_MODEL_NRF52832XXAA
-#define UART_IRQN           (UARTE0_UART0_IRQn)
-#endif
 
 /**
  * @brief  SPI configuration values

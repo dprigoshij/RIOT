@@ -29,6 +29,7 @@ extern "C" {
 #include "kernel_defines.h"
 #include "psa/crypto.h"
 
+#if IS_USED(MODULE_PSA_ASYMMETRIC)
 /**
  * @brief   Dispatch call of a hash signature function to a location specific backend.
  *          See psa_sign_hash()
@@ -48,6 +49,29 @@ psa_status_t psa_location_dispatch_sign_hash(  const psa_key_attributes_t *attri
                                                const psa_key_slot_t *slot,
                                                const uint8_t *hash,
                                                size_t hash_length,
+                                               uint8_t *signature,
+                                               size_t signature_size,
+                                               size_t *signature_length);
+
+/**
+ * @brief   Dispatch call of a message signature function to a location specific backend.
+ *          See psa_sign_message()
+ *
+ * @param attributes
+ * @param alg
+ * @param slot
+ * @param input
+ * @param input_length
+ * @param signature
+ * @param signature_size
+ * @param signature_length
+ * @return psa_status_t
+ */
+psa_status_t psa_location_dispatch_sign_message(const psa_key_attributes_t *attributes,
+                                               psa_algorithm_t alg,
+                                               const psa_key_slot_t *slot,
+                                               const uint8_t *input,
+                                               size_t input_length,
                                                uint8_t *signature,
                                                size_t signature_size,
                                                size_t *signature_length);
@@ -74,6 +98,29 @@ psa_status_t psa_location_dispatch_verify_hash(  const psa_key_attributes_t *att
                                                  size_t signature_length);
 
 /**
+ * @brief   Dispatch call of a message verification function to a location specific backend.
+ *          See psa_verify_message()
+ *
+ * @param attributes
+ * @param alg
+ * @param slot
+ * @param input
+ * @param input_length
+ * @param signature
+ * @param signature_length
+ * @return psa_status_t
+ */
+psa_status_t psa_location_dispatch_verify_message(const psa_key_attributes_t *attributes,
+                                                 psa_algorithm_t alg,
+                                                 const psa_key_slot_t *slot,
+                                                 const uint8_t *input,
+                                                 size_t input_length,
+                                                 const uint8_t *signature,
+                                                 size_t signature_length);
+#endif /* MODULE_PSA_ASYMMETRIC */
+
+#if IS_USED(MODULE_PSA_MAC)
+/**
  * @brief   Dispatch call of a mac computation function to a location specific backend.
  *          See psa_mac_compute()
  *
@@ -95,7 +142,9 @@ psa_status_t psa_location_dispatch_mac_compute(const psa_key_attributes_t *attri
                                                uint8_t *mac,
                                                size_t mac_size,
                                                size_t *mac_length);
+#endif
 
+#if IS_USED(MODULE_PSA_KEY_MANAGEMENT)
 /**
  * @brief   Dispatch call of the key generation function to a location specific backend.
  *          See psa_generate_key()
@@ -121,7 +170,9 @@ psa_status_t psa_location_dispatch_generate_key(const psa_key_attributes_t *attr
 psa_status_t psa_location_dispatch_import_key( const psa_key_attributes_t *attributes,
                                                const uint8_t *data, size_t data_length,
                                                psa_key_slot_t *slot, size_t *bits);
+#endif /* MODULE_PSA_KEY_MANAGEMENT */
 
+#if IS_USED(MODULE_PSA_CIPHER)
 /**
  * @brief   Dispatch call of a cipher encrypt setup function to a location specific backend.
  *          See psa_cipher_setup()
@@ -210,6 +261,7 @@ psa_status_t psa_location_dispatch_cipher_decrypt(  const psa_key_attributes_t *
                                                     uint8_t *output,
                                                     size_t output_size,
                                                     size_t *output_length);
+#endif /* MODULE_PSA_CIPHER */
 
 /**
  * @brief   Dispatch call of a random number generator to a specific backend.

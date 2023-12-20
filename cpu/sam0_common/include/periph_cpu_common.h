@@ -188,6 +188,7 @@ typedef enum {
     UART_FLAG_NONE            = 0x0,    /**< No flags set */
     UART_FLAG_RUN_STANDBY     = 0x1,    /**< run SERCOM in standby mode */
     UART_FLAG_WAKEUP          = 0x2,    /**< wake from sleep on receive */
+    UART_FLAG_TX_ONDEMAND     = 0x4,    /**< Only enable TX pin on demand */
 } uart_flag_t;
 
 #ifndef DOXYGEN
@@ -908,6 +909,25 @@ typedef struct {
 #endif /* USB_INST_NUM */
 
 /**
+ * @brief SDIO/SDMMC buffer alignment for SDHC because of DMA/FIFO buffer restrictions
+ */
+#define SDMMC_CPU_DMA_ALIGNMENT     4
+
+/**
+ * @brief SDIO/SDMMC buffer instantiation requirement for SDHC
+ */
+#define SDMMC_CPU_DMA_REQUIREMENTS  __attribute__((aligned(SDMMC_CPU_DMA_ALIGNMENT)))
+
+/**
+ * @brief SDHC peripheral configuration
+ */
+typedef struct {
+    void *sdhc; /**< SDHC peripheral */
+    gpio_t cd;  /**< Card Detect pin (must be GPIO_UNDEF if not connected) */
+    gpio_t wp;  /**< Write Protect pin (must be GPIO_UNDEF if not connected) */
+} sdhc_conf_t;
+
+/**
  * @name    WDT upper and lower bound times in ms
  * @{
  */
@@ -925,6 +945,14 @@ typedef struct {
  * @brief Watchdog has to be initialized.
  */
 #define WDT_HAS_INIT                   (1)
+
+/**
+ * @brief   Frequency meter configuration
+ */
+typedef struct {
+    gpio_t pin;             /**< GPIO at which the frequency is to be measured */
+    uint8_t gclk_src;       /**< GCLK source select for reference */
+} freqm_config_t;
 
 #if defined(REV_DMAC) || DOXYGEN
 /**

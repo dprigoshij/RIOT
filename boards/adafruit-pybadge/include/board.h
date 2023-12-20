@@ -20,7 +20,6 @@
 #define BOARD_H
 
 #include "cpu.h"
-#include "mtd.h"
 #include "periph/gpio.h"
 
 #ifdef __cplusplus
@@ -76,7 +75,7 @@ extern "C" {
 #define ST77XX_PARAM_RGB_CHANNELS   (128U)                      /**< Number of screen rgb channel (height) */
 #define ST77XX_PARAM_RGB        (1)                             /**< RGB configuration */
 #define ST77XX_PARAM_INVERTED   (0)                             /**< Inversion configuration */
-#define ST77XX_PARAM_ROTATION   (ST77XX_ROTATION_HORZ_FLIP)     /**< Rotation mode */
+#define ST77XX_PARAM_ROTATION   ST77XX_ROTATION_90              /**< Rotation mode */
 #define LCD_SCREEN_WIDTH        (ST77XX_PARAM_NUM_LINES)        /**< LCD screen width */
 #define LCD_SCREEN_HEIGHT       (ST77XX_PARAM_RGB_CHANNELS)     /**< LCD screen height */
 /** @} */
@@ -101,8 +100,7 @@ extern "C" {
  * @name MTD configuration
  * @{
  */
-extern mtd_dev_t *mtd0;                                         /**< pointer to mtd0 */
-#define MTD_0 mtd0                                              /**< mtd0 constant */
+#define MTD_0 mtd_dev_get(0)                                    /**< MTD_0 constant */
 /** @} */
 
 /**

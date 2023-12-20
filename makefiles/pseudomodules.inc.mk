@@ -397,6 +397,7 @@ PSEUDOMODULES += psa_riot_hashes_md5
 PSEUDOMODULES += psa_riot_hashes_sha_1
 PSEUDOMODULES += psa_riot_hashes_sha_224
 PSEUDOMODULES += psa_riot_hashes_sha_256
+PSEUDOMODULES += psa_riot_hashes_sha_512
 PSEUDOMODULES += psa_riot_hashes_hmac_sha256
 PSEUDOMODULES += fortuna_reseed
 ## @defgroup pseudomodule_random_cmd random_cmd
@@ -479,6 +480,7 @@ PSEUDOMODULES += shell_cmd_gnrc_pktbuf
 PSEUDOMODULES += shell_cmd_gnrc_rpl
 PSEUDOMODULES += shell_cmd_gnrc_sixlowpan_ctx
 PSEUDOMODULES += shell_cmd_gnrc_sixlowpan_frag_stats
+PSEUDOMODULES += shell_cmd_gnrc_txtsnd
 PSEUDOMODULES += shell_cmd_gnrc_udp
 PSEUDOMODULES += shell_cmd_heap
 PSEUDOMODULES += shell_cmd_i2c_scan

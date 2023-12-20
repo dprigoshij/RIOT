@@ -5,9 +5,12 @@ include ../Makefile.drivers_common
 ST7789_BOARDS = \
   esp32s2-lilygo-ttgo-t8 \
   esp32s3-usb-otg \
+  stm32f723e-disco \
+  stm32l496g-disco \
   #
 
 ST7796_BOARDS = \
+  esp32s3-wt32-sc01-plus \
   #
 
 ifneq (,$(filter $(ST7789_BOARDS),$(BOARD)))
@@ -20,6 +23,7 @@ endif
 DRIVER ?= st7735
 
 USEMODULE += $(DRIVER)
+USEMODULE += benchmark
 USEMODULE += ztimer
 USEMODULE += ztimer_msec
 
