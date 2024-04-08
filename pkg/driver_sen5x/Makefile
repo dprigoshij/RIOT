@@ -1,6 +1,6 @@
 PKG_NAME=driver_sen5x
 PKG_URL=https://github.com/Sensirion/embedded-i2c-sen5x
-PKG_VERSION=d3a54b1ffacacab1cacb1b373c1c9ea00de3b4eb
+PKG_VERSION=448a80ec490858f9fdec559fc95c3df52f0400c0
 PKG_LICENSE=BSD-3-Clause
 
 include $(RIOTBASE)/pkg/pkg.mk
