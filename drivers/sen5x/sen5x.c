@@ -162,7 +162,7 @@ void sen5x_get_warm_start(const sen5x_t *dev, uint16_t *warm_start)
     assert(dev && warm_start);
     i2c_acquire(dev->params.i2c_dev);
 
-    sen5x_get_warm_start_parameter(warm_start)
+    sen5x_get_warm_start_parameter(warm_start);
 
     i2c_release(dev->params.i2c_dev);
 }
