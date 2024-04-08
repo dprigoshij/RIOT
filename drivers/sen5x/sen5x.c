@@ -88,10 +88,10 @@ void sen5x_clean_fan(const sen5x_t *dev)
 
 bool sen5x_data_ready_flag(const sen5x_t *dev)
 {
-    assert(dev && status);
+    assert(dev);
     i2c_acquire(dev->params.i2c_dev);
 
-    bool *status;
+    bool *status = NULL;
     sen5x_read_data_ready(status);
 
     i2c_release(dev->params.i2c_dev);
@@ -248,7 +248,7 @@ void sen5x_get_rht_acceleration(const sen5x_t *dev, uint16_t *mode)
     assert(dev && mode);
     i2c_acquire(dev->params.i2c_dev);
 
-    sen5x_get_rht_acceleration_mode(&mode);
+    sen5x_get_rht_acceleration_mode(mode);
 
     i2c_release(dev->params.i2c_dev);
 }

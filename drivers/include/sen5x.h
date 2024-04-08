@@ -126,7 +126,7 @@ void sen5x_clean_fan(const sen5x_t *dev);
  * @return 0 if no new measurements are available
  * @return 1 if new measuremtns are ready to be read
  */
-void sen5x_data_ready_flag(const sen5x_t *dev)
+bool sen5x_data_ready_flag(const sen5x_t *dev);
 
 /**
  * @brief   Read measured mass concentration, humidity and temperature values
@@ -171,7 +171,7 @@ void sen5x_get_temperature_offset(const sen5x_t *dev, int16_t *temp_offset, int1
  * @param[in]    warm_start     Warm start behavior as a value in the range from
  *                              0 (cold start, default) to 65535 (warm start).
  */
-void sen5x_set_warm_start(const sen5x_t *dev, uint16_t warm_start)
+void sen5x_set_warm_start(const sen5x_t *dev, uint16_t warm_start);
 
 /**
  * @brief   Get the warm start paramater
@@ -180,7 +180,7 @@ void sen5x_set_warm_start(const sen5x_t *dev, uint16_t warm_start)
  * @param[out]   warm_start     Warm start behavior as a value in the range from
  *                              0 (cold start, default) to 65535 (warm start).
  */
-void sen5x_get_warm_start(const sen5x_t *dev, uint16_t *warm_start)
+void sen5x_get_warm_start(const sen5x_t *dev, uint16_t *warm_start);
 
 /**
  * @brief   Set the parameters for the VOC Algorithm tuning
@@ -256,7 +256,7 @@ void sen5x_set_nox_algorithm_tuning(
 void sen5x_get_nox_algorithm_tuning(
     const sen5x_t *dev, int16_t *index_offset, int16_t *learning_time_offset_hours,
     int16_t *learning_time_gain_hours, int16_t *gating_max_duration_minutes,
-    int16_t *std_initial, int16_t *gain_factor)
+    int16_t *std_initial, int16_t *gain_factor);
 
 /**
  * @brief   Set the mode for the RH/T acceleration algorithm
