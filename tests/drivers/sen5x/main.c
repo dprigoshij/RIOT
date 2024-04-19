@@ -22,7 +22,7 @@
 #include "sen5x.h"
 #include "sen5x_params.h"
 #include "sen5x_constants.h"
-#include "xtimer.h"
+#include "ztimer.h"
 
 #define TEST_ITERATIONS (100)
 #define MEASUREMENT_INTERVAL_USECS (2000000)
@@ -34,13 +34,13 @@ sen5x_measurement_t values;
 int main(void)
 {
     sen5x_init(&device, &para);
-    xtimer_usleep(500000);
+    ztimer_sleep(ZTIMER_USEC, 500000);
     sen5x_wake(&device);
-    xtimer_usleep(500000);
+    ztimer_sleep(ZTIMER_USEC, 500000);
 
     for(int i = 0; i < TEST_ITERATIONS; i++) {
         sen5x_read_values(&device, &values);
-        xtimer_usleep(MEASUREMENT_INTERVAL_USECS);
+        ztimer_sleep(ZTIMER_USEC, MEASUREMENT_INTERVAL_USECS);
 
         printf("Mass concentration pm1p0: %.1f µg/m³\n", values.mass_concentration_pm1p0 / 10.0f);
         printf("Mass concentration pm2p5: %.1f µg/m³\n", values.mass_concentration_pm2p5 / 10.0f);
