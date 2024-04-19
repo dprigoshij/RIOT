@@ -16,7 +16,7 @@ index d63f815..6949faf 100644
   * POSSIBILITY OF SUCH DAMAGE.
   */
  
-+#include "xtimer.h"
++#include "ztimer.h"
  #include "sensirion_i2c_hal.h"
  #include "sensirion_common.h"
  #include "sensirion_config.h"
@@ -109,7 +109,7 @@ index d63f815..6949faf 100644
 -    /* TODO:IMPLEMENT */
 +void sensirion_i2c_hal_sleep_usec(uint32_t useconds)
 +{
-+    xtimer_usleep(useconds);
++    ztimer_sleep(ZTIMER_USEC ,useconds);
  }
 diff --git a/sensirion_i2c_hal.h b/sensirion_i2c_hal.h
 index f97444a..d35a11b 100644
