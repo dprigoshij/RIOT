@@ -25,11 +25,6 @@
 #include "sen5x_params.h"
 
 /**
- * @brief   Define the number of configured sensors
- */
-#define SEN5X_NUM    ARRAY_SIZE(sen5x_params)
-
-/**
  * @brief   Allocation of memory for device descriptors
  */
 static sen5x_t sen5x_devs[SEN5X_NUM];

@@ -65,6 +65,11 @@ static const saul_reg_info_t sen5x_saul_info[] =
     SEN5X_SAUL_INFO
 };
 
+/**
+ * @brief   Get the number of configured SCD30 devices
+ */
+
+#define SEN5X_NUM    ARRAY_SIZE(sen5x_params)
 
 #ifdef __cplusplus
 }
