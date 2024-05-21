@@ -38,20 +38,20 @@ extern "C" {
  * @brief   Wrapper for measured values
  */
 typedef struct {
-    uint16_t mass_concentration_pm1p0;
-    uint16_t mass_concentration_pm2p5;
-    uint16_t mass_concentration_pm4p0;
-    uint16_t mass_concentration_pm10p0;
-    uint16_t number_concentration_pm0p5;
-    uint16_t number_concentration_pm1p0;
-    uint16_t number_concentration_pm2p5;
-    uint16_t number_concentration_pm4p0;
-    uint16_t number_concentration_pm10p0;
-    uint16_t typical_particle_size;
-    int16_t ambient_humidity;
-    int16_t ambient_temperature;
-    int16_t voc_index;
-    int16_t nox_index;
+    uint16_t mass_concentration_pm1p0;      /** raw value is scaled with factor 10: PM1.0 [µg/m³] = value / 10 */
+    uint16_t mass_concentration_pm2p5;      /** raw value is scaled with factor 10: PM2.5 [µg/m³] = value / 10 */
+    uint16_t mass_concentration_pm4p0;      /** raw value is scaled with factor 10: PM4.0 [µg/m³] = value / 10 */
+    uint16_t mass_concentration_pm10p0;     /** raw value is scaled with factor 10: PM10.0 [µg/m³] = value / 10 */
+    uint16_t number_concentration_pm0p5;    /** raw value is scaled with factor 10: PM0.5 [#/cm³] = value / 10 */
+    uint16_t number_concentration_pm1p0;    /** raw value is scaled with factor 10: PM1.0 [#/cm³] = value / 10 */
+    uint16_t number_concentration_pm2p5;    /** raw value is scaled with factor 10: PM2.5 [#/cm³] = value / 10 */
+    uint16_t number_concentration_pm4p0;    /** raw value is scaled with factor 10: PM4.0 [#/cm³] = value / 10 */
+    uint16_t number_concentration_pm10p0;   /** raw value is scaled with factor 10: PM10.0 [#/cm³] = value / 10 */
+    uint16_t typical_particle_size;         /** raw value is scaled with factor 1000: Size [µm] = value / 1000*/
+    int16_t ambient_humidity;               /** raw value is scaled with factor 100: RH [%] = value / 100 */
+    int16_t ambient_temperature;            /** raw value is scaled with factor 200: T [°C] = value / 200 */
+    int16_t voc_index;                      /** raw value is scaled with factor 10: VOC Index = value / 10 */
+    int16_t nox_index;                      /** raw value is scaled with factor 10: NOx Index = value / 10 */
 } sen5x_measurement_t;
 
 /**
