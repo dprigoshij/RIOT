@@ -39,7 +39,6 @@ info-build:
 	@echo ''
 	@echo 'BOARD:   $(BOARD)'
 	@echo 'CPU:     $(CPU)'
-	@echo 'MCU:     $(MCU)'
 	@echo ''
 	@echo 'RIOTBASE:    $(RIOTBASE)'
 	@echo 'BOARDDIR:    $(BOARDDIR)'
@@ -90,7 +89,6 @@ info-build:
 	@echo -e 'CXXEXFLAGS:$(patsubst %, \n\t%, $(CXXEXFLAGS))'
 	@echo ''
 	@echo 'RUST_TARGET: $(RUST_TARGET)'
-	@echo 'CARGO_CHANNEL: $(CARGO_CHANNEL)'
 	@echo 'CARGO_PROFILE: $(CARGO_PROFILE)'
 	@echo 'CARGO_OPTIONS: $(CARGO_OPTIONS)'
 	@echo ''
@@ -154,7 +152,6 @@ info-build-json:
 	@echo '"APPDIR": "$(APPDIR)",'
 	@echo '"BOARD": "$(BOARD)",'
 	@echo '"CPU": "$(CPU)",'
-	@echo '"MCU": "$(MCU)",'
 	@echo '"RIOTBASE": "$(RIOTBASE)",'
 	@echo '"BOARDDIR": "$(BOARDDIR)",'
 	@echo '"RIOTCPU": "$(RIOTCPU)",'
@@ -250,5 +247,13 @@ info-programmers-supported:
 	@echo $(sort $(PROGRAMMERS_SUPPORTED))
 
 info-rust:
-	cargo $(patsubst +,,+${CARGO_CHANNEL}) version
+	cargo version
 	c2rust --version
+	@echo "To use this setup of Rust in an IDE, add these command line arguments to the \`cargo check\` or \`rust-analyzer\`:"
+	@echo "    --profile $(CARGO_PROFILE) $(CARGO_OPTIONS)"
+	@echo "and export these environment variables:"
+	@echo "    CARGO_BUILD_TARGET=\"$(RUST_TARGET)\""
+	@echo "    RIOT_COMPILE_COMMANDS_JSON=\"$(CARGO_COMPILE_COMMANDS)\""
+	@echo "    RIOTBUILD_CONFIG_HEADER_C=\"$(RIOTBUILD_CONFIG_HEADER_C)\""
+	@echo "You can also call cargo related commands with \`make cargo-command CARGO_COMMAND=\"cargo check\"\`."
+	@echo "Beware that the way command line arguments are passed in is not consistent across cargo commands, so adding \`--profile $(CARGO_PROFILE)\` or other flags from above as part of CARGO_COMMAND may be necessary."

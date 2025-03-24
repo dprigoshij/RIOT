@@ -128,10 +128,9 @@ static void _ev_ack_timeout_handler(event_t *event)
     mutex_unlock(&lock);
 }
 
-void ieee802154_submac_ack_timer_set(ieee802154_submac_t *submac, uint16_t us)
+void ieee802154_submac_ack_timer_set(ieee802154_submac_t *submac)
 {
-    (void)submac;
-    ztimer_set(ZTIMER_USEC, &ack_timer, us);
+    ztimer_set(ZTIMER_USEC, &ack_timer, submac->ack_timeout_us);
 }
 
 void ieee802154_submac_ack_timer_cancel(ieee802154_submac_t *submac)
@@ -344,7 +343,7 @@ static void submac_rx_done(ieee802154_submac_t *submac)
     printf("%u, ", (unsigned)((buffer[1] & IEEE802154_FCF_VERS_MASK) >> 4));
     printf("Seq.: %u\n", (unsigned)ieee802154_get_seq(buffer));
     od_hex_dump(buffer + mhr_len, data_len - mhr_len, 0);
-    printf("txt (%u chars): ", data_len - mhr_len);
+    printf("txt (%" PRIuSIZE " chars): ", data_len - mhr_len);
     for (int i = mhr_len; i < data_len; i++) {
         if ((buffer[i] > 0x1F) && (buffer[i] < 0x80)) {
             putchar((char)buffer[i]);

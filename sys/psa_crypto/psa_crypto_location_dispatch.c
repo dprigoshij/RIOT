@@ -52,7 +52,10 @@ psa_status_t psa_location_dispatch_generate_key(const psa_key_attributes_t *attr
         if (status != PSA_SUCCESS) {
             /* In case anything goes wrong, free the key slot for reuse. */
             psa_se_drv_data_t *driver = psa_get_se_driver_data(attributes->lifetime);
-            psa_status_t abort_status = drv->key_management->p_destroy(drv_context, driver->ctx.internal.persistent_data, *slot_number);
+            psa_status_t abort_status =
+              drv->key_management->p_destroy(drv_context,
+                                             driver->ctx.internal.persistent_data,
+                                             *slot_number);
             return abort_status == PSA_SUCCESS ? status : abort_status;
         }
         return PSA_SUCCESS;
@@ -66,15 +69,10 @@ psa_status_t psa_location_dispatch_import_key( const psa_key_attributes_t *attri
                                                const uint8_t *data, size_t data_length,
                                                psa_key_slot_t *slot, size_t *bits)
 {
-    psa_status_t status = PSA_ERROR_CORRUPTION_DETECTED;
     psa_key_location_t location = PSA_KEY_LIFETIME_GET_LOCATION(attributes->lifetime);
-    uint8_t *key_data = NULL;
-    size_t *key_bytes = NULL;
-    size_t key_data_size;
-
-    key_data_size = psa_get_key_data_from_key_slot(slot, &key_data, &key_bytes);
 
 #if IS_USED(MODULE_PSA_SECURE_ELEMENT)
+    psa_status_t status = PSA_ERROR_CORRUPTION_DETECTED;
     const psa_drv_se_t *drv;
     psa_drv_se_context_t *drv_context;
     psa_key_slot_number_t *slot_number = psa_key_slot_get_slot_number(slot);
@@ -91,7 +89,10 @@ psa_status_t psa_location_dispatch_import_key( const psa_key_attributes_t *attri
         if (status != PSA_SUCCESS) {
             /* In case anything goes wrong, free the key slot for reuse. */
             psa_se_drv_data_t *driver = psa_get_se_driver_data(attributes->lifetime);
-            psa_status_t abort_status = drv->key_management->p_destroy(drv_context, driver->ctx.internal.persistent_data, *slot_number);
+            psa_status_t abort_status =
+              drv->key_management->p_destroy(drv_context,
+                                             driver->ctx.internal.persistent_data,
+                                             *slot_number);
             return abort_status == PSA_SUCCESS ? status : abort_status;
         }
         return PSA_SUCCESS;
@@ -100,9 +101,8 @@ psa_status_t psa_location_dispatch_import_key( const psa_key_attributes_t *attri
 
     switch (location) {
     case PSA_KEY_LOCATION_LOCAL_STORAGE:
-        return psa_builtin_import_key(attributes, data, data_length, key_data, key_data_size, key_bytes, bits);
+        return psa_algorithm_dispatch_import_key(attributes, data, data_length, slot, bits);
     default:
-        (void)status;
         return PSA_ERROR_NOT_SUPPORTED;
     }
 }
@@ -131,7 +131,8 @@ psa_status_t psa_location_dispatch_cipher_encrypt_setup(   psa_cipher_operation_
                 return PSA_ERROR_NOT_SUPPORTED;
             }
 
-            status = drv->cipher->p_setup(drv_context, &operation->backend_ctx.se_ctx, *slot_number,
+            status = drv->cipher->p_setup(drv_context,
+                                          &operation->backend_ctx.se_ctx, *slot_number,
                                           attributes->policy.alg, PSA_CRYPTO_DRIVER_ENCRYPT);
             if (status != PSA_SUCCESS) {
                 return status;
@@ -386,8 +387,9 @@ psa_status_t psa_location_dispatch_sign_message(const psa_key_attributes_t *attr
 {
     /* TODO: implement MODULE_PSA_SECURE_ELEMENT support */
 
-    return psa_algorithm_dispatch_sign_message(attributes, alg, slot, input, input_length, signature,
-                                            signature_size, signature_length);
+    return psa_algorithm_dispatch_sign_message(attributes, alg, slot, input,
+                                               input_length, signature,
+                                               signature_size, signature_length);
 }
 
 psa_status_t psa_location_dispatch_verify_hash(const psa_key_attributes_t *attributes,
@@ -432,8 +434,8 @@ psa_status_t psa_location_dispatch_verify_message(  const psa_key_attributes_t *
 {
     /* TODO: implement MODULE_PSA_SECURE_ELEMENT support */
 
-    return psa_algorithm_dispatch_verify_message(attributes, alg, slot, input, input_length, signature,
-                                              signature_length);
+    return psa_algorithm_dispatch_verify_message(attributes, alg, slot, input, input_length,
+                                                 signature, signature_length);
 }
 #endif /* MODULE_PSA_ASYMMETRIC */
 

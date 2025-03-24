@@ -35,7 +35,9 @@
 #endif
 
 #define STACKSIZE               THREAD_STACKSIZE_DEFAULT
-#define PRIO                    (THREAD_PRIORITY_MAIN - 1)
+/* in order to actually test @ref event_sync(), the waiter's prio should be lower
+ * than main s.t. it doesn't start executing right after events are enqueued */
+#define PRIO                    (THREAD_PRIORITY_MAIN + 1)
 #define DELAYED_QUEUES_NUMOF    2
 
 static char stack[STACKSIZE];
@@ -62,7 +64,7 @@ static void callback(event_t *arg)
     order++;
     expect(order == 4);
     expect(arg == &event);
-    printf("triggered 0x%08x\n", (unsigned)arg);
+    printf("triggered 0x%08" PRIxPTR "\n", (uintptr_t)arg);
 }
 
 typedef struct {
@@ -94,7 +96,8 @@ static void timed_callback(void *arg)
     uint32_t now = xtimer_now_usec();
 #endif
     expect((now - before >= 100000LU));
-    printf("triggered timed callback with arg 0x%08x after %" PRIu32 "us\n", (unsigned)arg, now - before);
+    printf("triggered timed callback with arg 0x%08" PRIxPTR " after %" PRIu32 "us\n",
+                                       (uintptr_t)arg, now - before);
     puts("[SUCCESS]");
 }
 
@@ -163,6 +166,9 @@ int main(void)
     event_queue_init_detached(&dqs[0]);
     event_queue_init_detached(&dqs[1]);
 
+    printf("running thread that will claim event queues %p\n", (void *)&dqs);
+    thread_create(stack, sizeof(stack), PRIO, 0, claiming_thread, dqs, "ct");
+
     printf("posting %p to delayed queue at index 1\n", (void *)&delayed_event1);
     event_post(&dqs[1], &delayed_event1);
     printf("posting %p to delayed queue at index 1\n", (void *)&delayed_event2);
@@ -170,24 +176,35 @@ int main(void)
     printf("posting %p to delayed queue at index 0\n", (void *)&delayed_event3);
     event_post(&dqs[0], &delayed_event3);
 
-    printf("running thread that will claim event queues %p\n", (void *)&dqs);
-    thread_create(stack, sizeof(stack), PRIO, 0, claiming_thread, dqs, "ct");
+    event_sync(&dqs[1]);
+    expect(order == 3);
+    printf("synced with %p\n", (void *)&delayed_event3);
 
     /* test posting different kind of events in order to a statically
      * initialized queue */
     event_queue_t queue = EVENT_QUEUE_INIT;
-    printf("posting 0x%08x\n", (unsigned)&event);
+    printf("posting 0x%08" PRIxPTR "\n", (uintptr_t)&event);
     event_post(&queue, &event);
 
-    printf("posting 0x%08x\n", (unsigned)&event2);
+    printf("posting 0x%08" PRIxPTR "\n", (uintptr_t)&event2);
     event_post(&queue, &event2);
-    printf("canceling 0x%08x\n", (unsigned)&event2);
+    printf("canceling 0x%08" PRIxPTR "\n", (uintptr_t)&event2);
     event_cancel(&queue, &event2);
 
     puts("posting custom event");
     event_post(&queue, (event_t *)&custom_event);
 
     event_timeout_t event_timeout;
+
+    /* uninitialied event_timeout_t should return false */
+    event_timeout_ztimer_init(&event_timeout, NULL, &queue, (event_t *)&event_callback);
+    expect(!event_timeout_is_pending(&event_timeout));
+
+    event_timeout_ztimer_init(&event_timeout, ZTIMER_USEC, NULL, (event_t *)&event_callback);
+    expect(!event_timeout_is_pending(&event_timeout));
+
+    event_timeout_ztimer_init(&event_timeout, ZTIMER_USEC, &queue, NULL);
+    expect(!event_timeout_is_pending(&event_timeout));
 
     puts("posting timed callback with timeout 1sec");
     event_timeout_init(&event_timeout, &queue, (event_t *)&event_callback);

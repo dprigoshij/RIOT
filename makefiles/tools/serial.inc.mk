@@ -1,12 +1,30 @@
 # Select the most recently attached tty interface
 ifeq (1,$(MOST_RECENT_PORT))
-  ifneq (,$(filter stdio_cdc_acm,$(USEMODULE)))
-    TTY_BOARD_FILTER ?= --model $(BOARD) --vendor 'RIOT-os\.org'
+  ifeq (,$(TTY_SELECT_CMD))
+    ifneq (,$(filter stdio_cdc_acm,$(USEMODULE)))
+      TTY_SELECT_CMD := $(RIOTTOOLS)/usb-serial/ttys.py \
+                        --most-recent \
+                        --format path serial \
+                        --model '$(BOARD)' --vendor 'RIOT-os\.org'
+      # Allow matching board by RIOT serial
+      ifneq (,$(SERIAL))
+        TTY_SELECT_CMD += --serial "$(SERIAL)"
+      endif
+      # Allow matching the bootloader TTY as well, if not running RIOT but
+      # but the bootloader
+      ifneq (,$(PROG_TTY_BOARD_FILTER))
+        TTY_SELECT_CMD += || $(RIOTTOOLS)/usb-serial/ttys.py \
+                             --most-recent \
+                             --format path serial \
+                             $(PROG_TTY_BOARD_FILTER)
+      endif
+    else
+      TTY_SELECT_CMD := $(RIOTTOOLS)/usb-serial/ttys.py \
+                        --most-recent \
+                        --format path serial \
+                        $(TTY_BOARD_FILTER)
+    endif
   endif
-  TTY_SELECT_CMD ?= $(RIOTTOOLS)/usb-serial/ttys.py \
-                    --most-recent \
-                    --format path serial \
-                    $(TTY_BOARD_FILTER)
   TTY_DETECTED := $(shell $(TTY_SELECT_CMD) || echo 'no-tty-detected no-serial-detected')
   PORT_DETECTED := $(firstword $(TTY_DETECTED))
   PORT_SERIAL_DETECTED := $(lastword $(TTY_DETECTED))
@@ -43,8 +61,10 @@ endif
 
 RIOT_TERMINAL ?= pyterm
 ifeq ($(RIOT_TERMINAL),pyterm)
+  PYTERMSESSION ?= $(shell date +%Y-%m-%d_%H.%M.%S)-$(APPLICATION)-$(BOARD)
+  PYTERMLOGDIR ?= "/tmp/pyterm-$(USER)"
   TERMPROG  ?= $(RIOTTOOLS)/pyterm/pyterm
-  TERMFLAGS ?= -p "$(PORT)" -b "$(BAUD)" $(PYTERMFLAGS)
+  TERMFLAGS ?= -p "$(PORT)" -b "$(BAUD)" -ln $(PYTERMLOGDIR) -rn "$(PYTERMSESSION)" $(PYTERMFLAGS)
 else ifeq ($(RIOT_TERMINAL),socat)
   SOCAT_OUTPUT ?= -
   TERMPROG ?= $(RIOT_TERMINAL)
@@ -80,4 +100,6 @@ else ifeq (${RIOT_TERMINAL},bootterm)
   TERMPROG = $(RIOTTOOLS)/bootterm/bt
   TERMFLAGS = $(BOOTTERMFLAGS) -a -b $(BAUD) $(PORT)
   TERMDEPS += $(TERMPROG)
+else ifeq (${RIOT_TERMINAL},native)
+  TERMPROG ?= $(ELFFILE)
 endif

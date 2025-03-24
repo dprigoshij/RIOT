@@ -76,9 +76,11 @@ int mtd_init(mtd_dev_t *mtd)
 
 #ifdef MODULE_MTD_WRITE_PAGE
     if ((mtd->driver->flags & MTD_DRIVER_FLAG_DIRECT_WRITE) == 0) {
-        mtd->work_area = malloc(mtd->pages_per_sector * mtd->page_size);
-        if (mtd->work_area == NULL) {
-            res = -ENOMEM;
+        if (!mtd->work_area) {
+            mtd->work_area = malloc(mtd->pages_per_sector * mtd->page_size);
+            if (mtd->work_area == NULL) {
+                res = -ENOMEM;
+            }
         }
     }
 #endif
@@ -395,7 +397,8 @@ int mtd_write_sector(mtd_dev_t *mtd, const void *data, uint32_t sector,
     }
 
     uint32_t page = sector * mtd->pages_per_sector;
-    return mtd_write_page_raw(mtd, data, page, 0, page * mtd->page_size);
+    return mtd_write_page_raw(mtd, data, page, 0,
+                              count * mtd->pages_per_sector * mtd->page_size);
 }
 
 int mtd_power(mtd_dev_t *mtd, enum mtd_power_state power)

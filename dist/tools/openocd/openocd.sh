@@ -346,6 +346,7 @@ do_flash() {
             -c 'telnet_port 0' \
             -c 'gdb_port 0' \
             -c 'init' \
+            ${OPENOCD_POST_INIT_CMDS} \
             -c 'targets' \
             ${OPENOCD_CMD_RESET_HALT} \
             ${OPENOCD_PRE_FLASH_CMDS} \
@@ -484,7 +485,7 @@ do_term() {
             -c 'bindto ${OPENOCD_SERVER_ADDRESS}' \
             -c 'tcl_port 0' \
             -c 'telnet_port 0' \
-            -c 'gdb_port 0' \
+            -c 'gdb_port 3333' \
             -c init \
             -c 'rtt setup '${RAM_START_ADDR}' '${RAM_LEN}' \"SEGGER RTT\"' \
             -c 'rtt start' \

@@ -20,30 +20,34 @@
 
 #include "clist.h"
 #include "psa_crypto_slot_management.h"
+#include "architecture.h"
 
 #define ENABLE_DEBUG    0
 #include "debug.h"
 
-#if PSA_PROTECTED_KEY_COUNT
-/**
- * @brief   Structure for a protected key slot.
- *
- *          These slots hold Slot Numbers for keys in protected storage and, if the key type is an
- *          asymmetric key pair, the public key.
- */
-typedef struct {
-    clist_node_t node;
-    size_t lock_count;
-    psa_key_attributes_t attr;
-    struct prot_key_data {
-        psa_key_slot_number_t slot_number;
-#if IS_USED(MODULE_PSA_ASYMMETRIC)
-        uint8_t pubkey_data[PSA_EXPORT_PUBLIC_KEY_MAX_SIZE];
-        size_t pubkey_data_len;
-#endif
-    } key;
-} psa_prot_key_slot_t;
+#if IS_USED(MODULE_PSA_PERSISTENT_STORAGE)
+#include "psa_crypto_persistent_storage.h"
+#include "psa_crypto_cbor_encoder.h"
 
+/**
+ * @brief   Max size required for the CBOR buffer.
+ *
+ *          Depends on the key type and size.
+ */
+#if PSA_ASYMMETRIC_KEYPAIR_COUNT
+#define CBOR_BUF_MAX_SIZE       (CBOR_BUF_SIZE_KEY_PAIR)
+#elif PSA_PROTECTED_KEY_COUNT && IS_USED(MODULE_PSA_ASYMMETRIC)
+#define CBOR_BUF_MAX_SIZE       (CBOR_BUF_SIZE_PROT_KEY)
+#elif PSA_SINGLE_KEY_COUNT
+#define CBOR_BUF_MAX_SIZE       (CBOR_BUF_SIZE_SINGLE_KEY)
+#elif PSA_PROTECTED_KEY_COUNT
+#define CBOR_BUF_MAX_SIZE       (CBOR_BUF_SIZE_PROT_KEY)
+#else
+#define CBOR_BUF_MAX_SIZE       (0)
+#endif
+#endif /* MODULE_PSA_PERSISTENT_STORAGE */
+
+#if PSA_PROTECTED_KEY_COUNT
 /**
  * @brief   Array containing the protected key slots
  */
@@ -56,28 +60,6 @@ static clist_node_t protected_list_empty;
 #endif /* PSA_PROTECTED_KEY_COUNT */
 
 #if PSA_ASYMMETRIC_KEYPAIR_COUNT
-/**
- * @brief   Structure for asymmetric key pairs.
- *
- *          Contains asymmetric private and public key pairs.
- *
- */
-typedef struct {
-    clist_node_t node;
-    size_t lock_count;
-    psa_key_attributes_t attr;
-    struct key_pair_data {
-        /**  Contains asymmetric private key*/
-        uint8_t privkey_data[PSA_BITS_TO_BYTES(PSA_MAX_PRIV_KEY_SIZE)];
-        /** Contains actual size of asymmetric private key */
-        size_t privkey_data_len;
-        /** Contains asymmetric public key */
-        uint8_t pubkey_data[PSA_EXPORT_PUBLIC_KEY_MAX_SIZE];
-        /*!< Contains actual size of asymmetric private key */
-        size_t pubkey_data_len;
-    } key;
-} psa_key_pair_slot_t;
-
 /**
  * @brief   Array containing the asymmetric key slots
  */
@@ -146,10 +128,10 @@ void psa_init_key_slots(void)
         clist_rpush(&protected_list_empty, &protected_key_slots[i].node);
     }
 
-    DEBUG("Protected Slot Count: %d, Size: %d\n", PSA_PROTECTED_KEY_COUNT,
+    DEBUG("Protected Slot Count: %d, Size: %" PRIuSIZE "\n", PSA_PROTECTED_KEY_COUNT,
           sizeof(psa_prot_key_slot_t));
-    DEBUG("Protected Slot Array Size: %d\n", sizeof(protected_key_slots));
-    DEBUG("Protected Slot Empty List Size: %d\n", clist_count(&protected_list_empty));
+    DEBUG("Protected Slot Array Size: %" PRIuSIZE "\n", sizeof(protected_key_slots));
+    DEBUG("Protected Slot Empty List Size: %" PRIuSIZE "\n", clist_count(&protected_list_empty));
 #endif /* PSA_PROTECTED_KEY_COUNT */
 
 #if PSA_ASYMMETRIC_KEYPAIR_COUNT
@@ -159,10 +141,10 @@ void psa_init_key_slots(void)
         clist_rpush(&key_pair_list_empty, &key_pair_slots[i].node);
     }
 
-    DEBUG("Asymmetric Slot Count: %d, Size: %d\n", PSA_ASYMMETRIC_KEYPAIR_COUNT,
+    DEBUG("Asymmetric Slot Count: %d, Size: %" PRIuSIZE "\n", PSA_ASYMMETRIC_KEYPAIR_COUNT,
           sizeof(psa_key_pair_slot_t));
-    DEBUG("Asymmetric Slot Array Size: %d\n", sizeof(key_pair_slots));
-    DEBUG("Asymmetric Slot Empty List Size: %d\n", clist_count(&key_pair_list_empty));
+    DEBUG("Asymmetric Slot Array Size: %" PRIuSIZE "\n", sizeof(key_pair_slots));
+    DEBUG("Asymmetric Slot Empty List Size: %" PRIuSIZE "\n", clist_count(&key_pair_list_empty));
 #endif /* PSA_ASYMMETRIC_KEYPAIR_COUNT */
 
 #if PSA_SINGLE_KEY_COUNT
@@ -172,9 +154,10 @@ void psa_init_key_slots(void)
         clist_rpush(&single_key_list_empty, &single_key_slots[i].node);
     }
 
-    DEBUG("Single Key Slot Count: %d, Size: %d\n", PSA_SINGLE_KEY_COUNT, sizeof(psa_key_slot_t));
-    DEBUG("Single Key Slot Array Size: %d\n", sizeof(single_key_slots));
-    DEBUG("Single Key Slot Empty List Size: %d\n", clist_count(&single_key_list_empty));
+    DEBUG("Single Key Slot Count: %d, Size: %" PRIuSIZE "\n", PSA_SINGLE_KEY_COUNT,
+          sizeof(psa_key_slot_t));
+    DEBUG("Single Key Slot Array Size: %" PRIuSIZE "\n", sizeof(single_key_slots));
+    DEBUG("Single Key Slot Empty List Size: %" PRIuSIZE "\n", clist_count(&single_key_list_empty));
 #endif /* PSA_SINGLE_KEY_COUNT */
 }
 
@@ -274,6 +257,19 @@ static int node_id_equals_key_id(clist_node_t *n, void *arg)
     return 0;
 }
 
+#if IS_USED(MODULE_PSA_PERSISTENT_STORAGE)
+static int node_lifetime_is_persistent(clist_node_t *n, void *arg)
+{
+    psa_key_slot_t *slot = container_of(n, psa_key_slot_t, node);
+    if (!PSA_KEY_LIFETIME_IS_VOLATILE(slot->attr.lifetime)) {
+        return 1;
+    }
+
+    (void) arg;
+    return 0;
+}
+#endif /* MODULE_PSA_PERSISTENT_STORAGE */
+
 /**
  * @brief   Find the key slot containing the key with a specified ID
  *
@@ -289,37 +285,108 @@ static psa_status_t psa_get_and_lock_key_slot_in_memory(psa_key_id_t id, psa_key
 {
     psa_status_t status = PSA_ERROR_CORRUPTION_DETECTED;
 
-    if (psa_key_id_is_volatile(id)) {
-        clist_node_t *slot_node = clist_foreach(&key_slot_list, node_id_equals_key_id, &id);
-        if (slot_node == NULL) {
-            return PSA_ERROR_INVALID_HANDLE;
-        }
+    clist_node_t *slot_node = clist_foreach(&key_slot_list, node_id_equals_key_id, &id);
+    if (slot_node == NULL) {
+        return PSA_ERROR_DOES_NOT_EXIST;
+    }
 
-        psa_key_slot_t *slot = container_of(slot_node, psa_key_slot_t, node);
-        status = psa_lock_key_slot(slot);
-        if (status == PSA_SUCCESS) {
-            *p_slot = slot;
-        }
+    psa_key_slot_t *slot = container_of(slot_node, psa_key_slot_t, node);
+    status = psa_lock_key_slot(slot);
+    if (status == PSA_SUCCESS) {
+        *p_slot = slot;
+    }
+    return status;
+}
+
+#if IS_USED(MODULE_PSA_PERSISTENT_STORAGE)
+/**
+ * @brief   Reads a persistently stored key from storage
+ *
+ * @param   id        ID of the desired key
+ * @param   p_slot    Pointer to store key slot in
+ * @return  psa_status_t
+ */
+static psa_status_t psa_get_persisted_key_slot_from_storage(psa_key_id_t id,
+                                                            psa_key_slot_t **p_slot)
+{
+    uint8_t cbor_buf[CBOR_BUF_MAX_SIZE];
+    size_t cbor_encoded_len;
+    psa_key_attributes_t attr = psa_key_attributes_init();
+
+    psa_status_t status = psa_read_encoded_key_slot_from_file(id, cbor_buf, sizeof(cbor_buf),
+                                                              &cbor_encoded_len);
+    if (status != PSA_SUCCESS) {
         return status;
     }
 
-    return PSA_ERROR_NOT_SUPPORTED;
+    /* Decode key attributes first, to get information about key */
+    status = psa_decode_key_attributes(&attr, cbor_buf, cbor_encoded_len);
+    if (status != PSA_SUCCESS) {
+        return status;
+    }
+
+    /* Allocate key slot for specific key type */
+    status = psa_allocate_empty_key_slot(&attr.id, &attr, p_slot);
+    if (status != PSA_SUCCESS) {
+        return status;
+    }
+
+    (*p_slot)->attr = attr;
+
+    /* Decode rest of key data */
+    return psa_decode_key_slot_data(*p_slot, cbor_buf, cbor_encoded_len);
 }
+
+psa_status_t psa_persist_key_slot_in_storage(psa_key_slot_t *slot)
+{
+    if (psa_key_id_is_volatile(slot->attr.id) ||
+        PSA_KEY_LIFETIME_IS_VOLATILE(slot->attr.lifetime)) {
+            DEBUG("[psa_crypto_slot_mgmt] persist key: ID or lifetime is volatile\n");
+            return PSA_ERROR_INVALID_ARGUMENT;
+    }
+
+    uint8_t cbor_buf[CBOR_BUF_MAX_SIZE];
+    size_t cbor_enc_size;
+    psa_encode_key_slot(slot, cbor_buf, sizeof(cbor_buf), &cbor_enc_size);
+    DEBUG("[psa_crypto_slot_mgmt] Max Key Slot Size: %d | CBOR enc size: %d\n",
+                                                (int) CBOR_BUF_MAX_SIZE, (int) cbor_enc_size);
+
+    return psa_write_encoded_key_slot_to_file(slot->attr.id, cbor_buf, cbor_enc_size);
+}
+
+/**
+ * @brief   Find and wipe a persistent key slot in local storage to make room for a new key
+ *
+ * @return  PSA_SUCCESS
+ * @return  PSA_ERROR_INSUFFICIENT_STORAGE  No persistent key found in local storage
+ *          PSA_ERROR_DOES_NOT_EXIST
+ */
+static psa_status_t psa_find_and_wipe_persistent_key_from_local_storage(void)
+{
+    clist_node_t *slot_node = clist_foreach(&key_slot_list, node_lifetime_is_persistent, NULL);
+    if (slot_node == NULL) {
+        return PSA_ERROR_INSUFFICIENT_STORAGE;
+    }
+
+    return psa_wipe_key_slot(container_of(slot_node, psa_key_slot_t, node));
+}
+#endif /* MODULE_PSA_PERSISTENT_STORAGE */
 
 psa_status_t psa_get_and_lock_key_slot(psa_key_id_t id, psa_key_slot_t **p_slot)
 {
     /* TODO validate ID */
-
     psa_status_t status = PSA_ERROR_CORRUPTION_DETECTED;
 
     *p_slot = NULL;
 
+    /* Try to find key in volatile key slot list */
     status = psa_get_and_lock_key_slot_in_memory(id, p_slot);
-    if (status != PSA_ERROR_DOES_NOT_EXIST) {
-        return status;
-    }
 
-    /* TODO: get persistent key from storage and load into slot */
+#if IS_USED(MODULE_PSA_PERSISTENT_STORAGE)
+    if (status == PSA_ERROR_DOES_NOT_EXIST && !psa_key_id_is_volatile(id)) {
+        return psa_get_persisted_key_slot_from_storage(id, p_slot);
+    }
+#endif /* MODULE_PSA_PERSISTENT_STORAGE */
 
     return status;
 }
@@ -345,12 +412,19 @@ static psa_status_t psa_allocate_key_slot_in_list(psa_key_slot_t **p_slot,
 
     /* Check if any empty elements of this key slot type are left */
     if (clist_is_empty(empty_list)) {
+#if IS_USED(MODULE_PSA_PERSISTENT_STORAGE)
+        /* If no slots left: Look for slot in list with persistent key
+           (key will be stored in persistent memory and slot can be reused) */
+        psa_status_t status = psa_find_and_wipe_persistent_key_from_local_storage();
+        if (status != PSA_SUCCESS) {
+            DEBUG("Key Slot MGMT: No PSA Key Slot available\n");
+            return status;
+        }
+#else
         DEBUG("Key Slot MGMT: No PSA Key Slot available\n");
         return PSA_ERROR_INSUFFICIENT_STORAGE;
+#endif /* MODULE_PSA_PERSISTENT_STORAGE */
     }
-
-    /* TODO: If no slots left: Look for slot in list with persistent key
-       (key will be stored in persistent memory and slot can be reused) */
 
     /* Remove key slote node from empty list and append to actual list */
     clist_node_t *new_slot = clist_rpop(empty_list);
@@ -363,15 +437,15 @@ static psa_status_t psa_allocate_key_slot_in_list(psa_key_slot_t **p_slot,
     return PSA_SUCCESS;
 }
 
-psa_status_t psa_allocate_empty_key_slot(   psa_key_id_t *id,
-                                            const psa_key_attributes_t *attr,
-                                            psa_key_slot_t **p_slot)
+psa_status_t psa_allocate_empty_key_slot(psa_key_id_t *id,
+                                         const psa_key_attributes_t *attr,
+                                         psa_key_slot_t **p_slot)
 {
     psa_status_t status = PSA_ERROR_CORRUPTION_DETECTED;
     psa_key_slot_t *new_slot = NULL;
 
-    /* Change later, when we also have persistent keys */
-    if (key_id_count == PSA_KEY_ID_VOLATILE_MAX) {
+    if (PSA_KEY_LIFETIME_IS_VOLATILE(attr->lifetime) &&
+        key_id_count == PSA_KEY_ID_VOLATILE_MAX) {
         DEBUG("Key Slot MGMT: Maximum key ID reached\n");
         return PSA_ERROR_INSUFFICIENT_STORAGE;
     }
@@ -390,7 +464,19 @@ psa_status_t psa_allocate_empty_key_slot(   psa_key_id_t *id,
             *id = 0;
             return status;
         }
-        *id = key_id_count++;
+
+        if (PSA_KEY_LIFETIME_IS_VOLATILE(attr->lifetime)) {
+            *id = key_id_count++;
+        }
+#if IS_USED(MODULE_PSA_PERSISTENT_STORAGE)
+        else if (!psa_key_id_is_volatile(attr->id)) {
+            *id = attr->id;
+        }
+#endif /* MODULE_PSA_PERSISTENT_STORAGE */
+        else {
+            DEBUG("Key Slot MGMT: invalid lifetime or ID\n");
+            return PSA_ERROR_INVALID_ARGUMENT;
+        }
         *p_slot = new_slot;
 
         return PSA_SUCCESS;
@@ -454,7 +540,13 @@ psa_status_t psa_validate_key_persistence(psa_key_lifetime_t lifetime)
     if (PSA_KEY_LIFETIME_IS_VOLATILE(lifetime)) {
         return PSA_SUCCESS;
     }
-    /* TODO: Implement persistent key storage */
+
+#if IS_USED(MODULE_PSA_PERSISTENT_STORAGE)
+    if (PSA_KEY_LIFETIME_GET_PERSISTENCE(lifetime) == PSA_KEY_LIFETIME_PERSISTENT) {
+        return PSA_SUCCESS;
+    }
+#endif /* MODULE_PSA_PERSISTENT_STORAGE */
+
     return PSA_ERROR_NOT_SUPPORTED;
 }
 
@@ -483,28 +575,26 @@ size_t psa_get_key_data_from_key_slot(const psa_key_slot_t *slot, uint8_t **key_
     *key_data = NULL;
     *key_bytes = NULL;
 
-
     if (!psa_key_lifetime_is_external(attr.lifetime)) {
-#if PSA_SINGLE_KEY_COUNT
         if (!PSA_KEY_TYPE_IS_KEY_PAIR(attr.type)) {
+#if PSA_SINGLE_KEY_COUNT
             *key_data = (uint8_t *)slot->key.data;
             *key_bytes = (size_t *)&slot->key.data_len;
             key_data_size = sizeof(slot->key.data);
-        }
 #endif /* PSA_SINGLE_KEY_COUNT */
-
-#if PSA_ASYMMETRIC_KEYPAIR_COUNT
+        }
         else {
+#if PSA_ASYMMETRIC_KEYPAIR_COUNT
             *key_data = ((psa_key_pair_slot_t *)slot)->key.privkey_data;
             *key_bytes = &((psa_key_pair_slot_t *)slot)->key.privkey_data_len;
             key_data_size = sizeof(((psa_key_pair_slot_t *)slot)->key.privkey_data);
-        }
 #endif
+        }
     }
     return key_data_size;
 }
 
-#if IS_USED(MODULE_PSA_SECURE_ELEMENT) && PSA_PROTECTED_KEY_COUNT
+#if PSA_PROTECTED_KEY_COUNT
 psa_key_slot_number_t * psa_key_slot_get_slot_number(const psa_key_slot_t *slot)
 {
     return &(((psa_prot_key_slot_t *)slot)->key.slot_number);
@@ -524,22 +614,22 @@ void psa_get_public_key_data_from_key_slot(const psa_key_slot_t *slot, uint8_t *
     }
 
     if (!psa_key_lifetime_is_external(attr.lifetime)) {
-#if PSA_SINGLE_KEY_COUNT
         if (!PSA_KEY_TYPE_IS_KEY_PAIR(attr.type)) {
+#if PSA_SINGLE_KEY_COUNT
             *pubkey_data = ((psa_key_slot_t *)slot)->key.data;
             *pubkey_data_len = &((psa_key_slot_t *)slot)->key.data_len;
             return;
-        }
 #endif /* PSA_SINGLE_KEY_COUNT */
-#if PSA_ASYMMETRIC_KEYPAIR_COUNT
+        }
         else {
+#if PSA_ASYMMETRIC_KEYPAIR_COUNT
             *pubkey_data = ((psa_key_pair_slot_t *)slot)->key.pubkey_data;
             *pubkey_data_len = &((psa_key_pair_slot_t *)slot)->key.pubkey_data_len;
             return;
-        }
 #endif
+        }
     }
-#if PSA_PROTECTED_KEY_COUNT && IS_USED(MODULE_PSA_ASYMMETRIC)
+#if (PSA_PROTECTED_KEY_COUNT && PSA_ASYMMETRIC_KEYPAIR_COUNT)
     *pubkey_data = ((psa_prot_key_slot_t *)slot)->key.pubkey_data;
     *pubkey_data_len = &((psa_prot_key_slot_t *)slot)->key.pubkey_data_len;
 #endif

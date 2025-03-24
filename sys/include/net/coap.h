@@ -519,6 +519,7 @@ typedef enum {
  */
 #define COAP_OBS_REGISTER        (0)
 #define COAP_OBS_DEREGISTER      (1)
+#define COAP_OBS_MAX_VALUE_MASK  (0xffffff) /**< observe value is 24 bits */
 /** @} */
 
 /**
@@ -534,6 +535,12 @@ typedef enum {
  */
 #define COAP_ETAG_LENGTH_MAX     (8U)   /**< maximum length of the ETag option */
 /** @} */
+
+/**
+ * @brief   Marks the boundary between header and payload
+ */
+#define COAP_PAYLOAD_MARKER      (0xFF)
+#define COAP_PAYLOAD_MARKER_SIZE (1U)   /**< Size of the payload marker */
 
 /**
  * @defgroup net_coap_conf    CoAP compile configurations
@@ -558,7 +565,7 @@ typedef enum {
  * (@ref CONFIG_COAP_ACK_TIMEOUT_MS * @ref CONFIG_COAP_RANDOM_FACTOR_1000 / 1000).
  */
 #ifndef CONFIG_COAP_ACK_TIMEOUT_MS
-#define CONFIG_COAP_ACK_TIMEOUT_MS     (2000UL)
+#define CONFIG_COAP_ACK_TIMEOUT_MS     (2000)
 #endif
 
 /**

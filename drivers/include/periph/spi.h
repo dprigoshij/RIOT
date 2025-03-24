@@ -34,8 +34,9 @@
  * low-power mode to save energy.
  *
  * The SPI unit's initialization is split into 3 parts:
- * 1. `spi_init()` should be called once for each SPI unit defined by a board
- *    during system initialization.
+ * 1. The SPI buses are automatically initialized during boot according to the
+ *    specification in board's `periph_conf.h`. (The exact format depends on the
+ *    MCU used.) See @ref spi_init for details.
  * 2. `spi_init_cs()` should be called during device driver initialization, as
  *    each chip select pin/line is used uniquely by a specific device, i.e. chip
  *    select lines are no shared resource.
@@ -66,8 +67,8 @@
 #ifndef PERIPH_SPI_H
 #define PERIPH_SPI_H
 
+#include <endian.h>
 #include <errno.h>
-#include <limits.h>
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
@@ -78,6 +79,14 @@
 
 #ifdef __cplusplus
 extern "C" {
+#endif
+
+/**
+ * @brief   Threshold under which polling transfers are used instead of DMA
+ *          TODO: determine at run-time based on SPI clock
+ */
+#ifndef CONFIG_SPI_DMA_THRESHOLD_BYTES
+#define CONFIG_SPI_DMA_THRESHOLD_BYTES  16
 #endif
 
 /**
@@ -190,14 +199,17 @@ typedef enum {
  * MISO, MOSI, and CLK pins. After initialization, the given device should be
  * in power down state.
  *
- * This function is intended to be called by the board initialization code
- * during system startup to prepare the (shared) SPI device for further usage.
- * It uses the board specific initialization parameters as defined in the
- * board's `periph_conf.h`.
+ * This function is called internally during system startup to prepare the
+ * (shared) SPI device for further usage. It uses the board specific
+ * initialization parameters as defined in the board's `periph_conf.h`.
  *
  * Errors (e.g. invalid @p bus parameter) are not signaled through a return
  * value, but should be signaled using the assert() function internally.
  *
+ * @warning     This function **MUST NOT** be called by the user unless you add
+ *              `DISABLE_MODULE += periph_init_spi` to your `Makefile`. If you
+ *              do so, call this function before any call to `spi_acquire()`,
+ *              and call no more than **once**.
  * @note    This function MUST not be called more than once per bus!
  *
  * @param[in] bus       SPI device to initialize
@@ -421,6 +433,25 @@ uint8_t spi_transfer_reg(spi_t bus, spi_cs_t cs, uint8_t reg, uint8_t out);
  */
 void spi_transfer_regs(spi_t bus, spi_cs_t cs, uint8_t reg,
                        const void *out, void *in, size_t len);
+
+/**
+ * @brief   Transfer a 16 bit number in big endian byte order
+ *
+ * @param[in]   bus             SPI device to use
+ * @param[in]   cs              chip select pin/line to use, set to
+ *                              SPI_CS_UNDEF if chip select should not be
+ *                              handled by the SPI driver
+ * @param[in]   cont            if true, keep device selected after transfer
+ * @param[in]   host_number     number to transfer in host byte order
+ * @return      The 16 bit number received in host byte order
+ */
+static inline uint16_t spi_transfer_u16_be(spi_t bus, spi_cs_t cs, bool cont, uint16_t host_number)
+{
+    const uint16_t send = htobe16(host_number);
+    uint16_t receive;
+    spi_transfer_bytes(bus, cs, cont, &send, &receive, sizeof(receive));
+    return be16toh(receive);
+}
 
 #ifdef __cplusplus
 }

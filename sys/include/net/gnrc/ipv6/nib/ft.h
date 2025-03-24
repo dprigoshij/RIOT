@@ -81,7 +81,7 @@ int gnrc_ipv6_nib_ft_get(const ipv6_addr_t *dst, gnrc_pktsnip_t *pkt,
  */
 int gnrc_ipv6_nib_ft_add(const ipv6_addr_t *dst, unsigned dst_len,
                          const ipv6_addr_t *next_hop, unsigned iface,
-                         uint16_t lifetime);
+                         uint32_t lifetime);
 
 /**
  * @brief   Deletes a route from forwarding table.
@@ -112,7 +112,8 @@ void gnrc_ipv6_nib_ft_del(const ipv6_addr_t *dst, unsigned dst_len);
  *
  * The iteration over all forwarding table entries in the NIB includes all
  * entries added via @p gnrc_ipv6_nib_ft_add() and entries that are currently
- * in the Destination Cache, in the Prefix List, and in the Default Router List.
+ * in the Destination Cache, in the Prefix List (only if they're on-link),
+ * and in the Default Router List.
  *
  * Usage example:
  *

@@ -25,7 +25,9 @@
 #ifndef SUIT_TRANSPORT_WORKER_H
 #define SUIT_TRANSPORT_WORKER_H
 
-#include "net/nanocoap.h"
+#if MODULE_NANOCOAP
+#  include "net/nanocoap.h"
+#endif
 
 #ifdef __cplusplus
 extern "C" {
@@ -80,6 +82,15 @@ void suit_worker_trigger_prepared(const uint8_t *manifest, size_t size);
  * cases need.
  */
 int suit_worker_try_prepare(uint8_t **buffer, size_t *size);
+
+/**
+ * @brief   Callback that is executed after the SUIT process has finished
+ *
+ * @param[in] res   Result of the SUIT update, 0 on success
+ *
+ * By default this will reboot the board, can be overwritten by the application.
+ */
+void suit_worker_done_cb(int res);
 
 /**
  * @brief   Trigger a SUIT update

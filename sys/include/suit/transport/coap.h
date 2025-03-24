@@ -32,31 +32,6 @@
 extern "C" {
 #endif
 
-/**
- * @brief    Start SUIT CoAP thread
- *
- * @deprecated This will be removed after after the 2023.01 release.
- */
-static inline void suit_coap_run(void)
-{
-}
-
-/**
- * @brief SUIT CoAP endpoint entry.
- *
- * In order to use, include this header, then add SUIT_COAP_SUBTREE to the nanocoap endpoint array.
- * Mind the alphanumerical sorting!
- *
- * See examples/suit_update for an example.
- */
-#define SUIT_COAP_SUBTREE \
-    { \
-        .path="/suit/", \
-        .methods=COAP_MATCH_SUBTREE | COAP_METHOD_GET | COAP_METHOD_POST | COAP_METHOD_PUT, \
-        .handler=coap_subtree_handler, \
-        .context=(void*)&coap_resource_subtree_suit \
-    }
-
 /*
  * Dear Reviewer,
  *
@@ -71,11 +46,6 @@ static inline void suit_coap_run(void)
  * Kaspar (July 2019)
  */
 #ifndef DOXYGEN
-
-/**
- * @brief   Reference to the coap resource subtree
- */
-extern const coap_resource_subtree_t coap_resource_subtree_suit;
 
 /**
  * @brief Coap block-wise-transfer size used for SUIT

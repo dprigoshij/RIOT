@@ -65,7 +65,7 @@
  * reading the request, the callback must use functions provided by gcoap to
  * format the response, as described below. The callback *must* read the request
  * thoroughly before calling the functions, because the response buffer likely
- * reuses the request buffer. See `examples/gcoap/gcoap_cli.c` for a simple
+ * reuses the request buffer. See `examples/networking/coap/gcoap/client.c` for a simple
  * example of a callback.
  *
  * Here is the expected sequence for a callback function:
@@ -105,7 +105,7 @@
  *
  * Client operation includes two phases: creating and sending a request, and
  * handling the response asynchronously in a client supplied callback. See
- * `examples/gcoap/gcoap_cli.c` for a simple example of sending a request and
+ * `examples/networking/coap/gcoap/client.c` for a simple example of sending a request and
  * reading the response.
  *
  * ### Creating a request ###
@@ -260,7 +260,7 @@
  *
  * The client requests a specific blockwise payload from the overall body by
  * writing a Block2 option in the request. See _resp_handler() in the
- * [gcoap](https://github.com/RIOT-OS/RIOT/blob/master/examples/gcoap/gcoap_cli.c)
+ * [gcoap](https://github.com/RIOT-OS/RIOT/blob/master/examples/networking/coap/gcoap/client.c)
  * example in the RIOT distribution, which implements the sequence described
  * below.
  *
@@ -330,7 +330,8 @@
  * coap_opt_add_proxy_uri(&pdu, uri);
  * unsigned len = coap_opt_finish(&pdu, COAP_OPT_FINISH_NONE);
  *
- * gcoap_req_send((uint8_t *) pdu->hdr, len, proxy_remote, _resp_handler, NULL);
+ * gcoap_req_send((uint8_t *) pdu->hdr, len, proxy_remote, NULL, _resp_handler, NULL,
+ *                GCOAP_SOCKET_TYPE_UNDEF);
  * ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
  *
  * See the gcoap example for a sample implementation.
@@ -371,7 +372,8 @@
  * - Message Type: Supports non-confirmable (NON) messaging. Additionally
  *   provides a callback on timeout. Provides piggybacked ACK response to a
  *   confirmable (CON) request.
- * - Observe extension: Provides server-side registration and notifications.
+ * - Observe extension: Provides server-side registration and notifications
+ *   and client-side observe.
  * - Server and Client provide helper functions for writing the
  *   response/request. See the CoAP topic in the source documentation for
  *   details. See the gcoap example for sample implementations.
@@ -550,6 +552,10 @@ extern "C" {
 /**
  * @ingroup net_gcoap_conf
  * @brief   Maximum number of Observe clients
+ *
+ * @note As documented in this file, the implementation is limited to one observer per resource.
+ *       Therefore, every stored observer is associated with a different resource.
+ *       If you have only one observable resource, you could set this value to 1.
  */
 #ifndef CONFIG_GCOAP_OBS_CLIENTS_MAX
 #define CONFIG_GCOAP_OBS_CLIENTS_MAX   (2)
@@ -557,7 +563,24 @@ extern "C" {
 
 /**
  * @ingroup net_gcoap_conf
+ * @brief   Maximum number of local notifying endpoint addresses
+ *
+ * @note As documented in this file, the implementation is limited to one observer per resource.
+ *       Therefore, every stored local endpoint alias is associated with an observation context
+ *       of a different resource.
+ *       If you have only one observable resource, you could set this value to 1.
+ */
+#ifndef CONFIG_GCOAP_OBS_NOTIFIERS_MAX
+#define CONFIG_GCOAP_OBS_NOTIFIERS_MAX  (2)
+#endif
+
+/**
+ * @ingroup net_gcoap_conf
  * @brief   Maximum number of registrations for Observable resources
+ *
+ * @note As documented in this file, the implementation is limited to one observer per resource.
+ *       Therefore, every stored observation context is associated with a different resource.
+ *       If you have only one observable resource, you could set this value to 1.
  */
 #ifndef CONFIG_GCOAP_OBS_REGISTRATIONS_MAX
 #define CONFIG_GCOAP_OBS_REGISTRATIONS_MAX     (2)
@@ -620,11 +643,12 @@ extern "C" {
  * @brief Stack size for module thread
  * @{
  */
-#ifndef GCOAP_STACK_SIZE
+#ifndef GCOAP_DTLS_EXTRA_STACKSIZE
 #if IS_USED(MODULE_GCOAP_DTLS)
 #define GCOAP_DTLS_EXTRA_STACKSIZE  (THREAD_STACKSIZE_DEFAULT)
 #else
 #define GCOAP_DTLS_EXTRA_STACKSIZE  (0)
+#endif
 #endif
 
 /**
@@ -637,6 +661,7 @@ extern "C" {
 #define GCOAP_VFS_EXTRA_STACKSIZE   (0)
 #endif
 
+#ifndef GCOAP_STACK_SIZE
 #define GCOAP_STACK_SIZE (THREAD_STACKSIZE_DEFAULT + DEBUG_EXTRA_STACKSIZE \
                           + sizeof(coap_pkt_t) + GCOAP_DTLS_EXTRA_STACKSIZE \
                           + GCOAP_VFS_EXTRA_STACKSIZE)
@@ -720,7 +745,7 @@ typedef int (*gcoap_request_matcher_t)(gcoap_listener_t *listener,
  * @brief   CoAP socket types
  *
  * May be used as flags for @ref gcoap_listener_t, but must be used numerically
- * with @ref gcoap_req_send_tl().
+ * with @ref gcoap_req_send().
  */
 typedef enum {
     GCOAP_SOCKET_TYPE_UNDEF = 0x0,      /**< undefined */
@@ -835,8 +860,10 @@ struct gcoap_request_memo {
  */
 typedef struct {
     sock_udp_ep_t *observer;            /**< Client endpoint; unused if null */
+    sock_udp_ep_t *notifier;            /**< Local endpoint to send notifications */
     const coap_resource_t *resource;    /**< Entity being observed */
     uint8_t token[GCOAP_TOKENLEN_MAX];  /**< Client token for notifications */
+    uint16_t last_msgid;                /**< Message ID of last notification */
     unsigned token_len;                 /**< Actual length of token attribute */
     gcoap_socket_t socket;              /**< Transport type to observer */
 } gcoap_observe_memo_t;
@@ -868,6 +895,22 @@ kernel_pid_t gcoap_init(void);
  * @param[in] listener  Listener containing the resources.
  */
 void gcoap_register_listener(gcoap_listener_t *listener);
+
+/**
+ * @brief   Iterate through all registered listeners and check for a resource, matching by @p uri_path
+ *
+ *  This functions returns resources matching a subpath @see COAP_MATCH_SUBTREE.
+ *  If an exact match is required, check with `strncmp()`.
+ *
+ * @param[in, out]  last_listener       A pointer to NULL for the first call, otherwise the last returned listener
+ * @param[in]       last_resource       NULL for the first call, otherwise the last returned resource
+ * @param[in]       uri_path            The URI path to search for
+ *
+ * @return  The resource that matches the URI path
+ */
+const coap_resource_t *gcoap_get_resource_by_path_iterator(const gcoap_listener_t **last_listener,
+                                                           const coap_resource_t *last_resource,
+                                                           const char *uri_path);
 
 /**
  * @brief   Initializes a CoAP request PDU on a buffer.
@@ -958,8 +1001,34 @@ static inline ssize_t gcoap_request(coap_pkt_t *pdu, uint8_t *buf, size_t len,
 /**
  * @brief   Sends a buffer containing a CoAP request to the provided endpoint
  *
- * @deprecated Will be an alias for @ref gcoap_req_send after the 2022.01
- *             release. Will be removed after the 2022.04 release.
+ * @param[in] buf           Buffer containing the PDU
+ * @param[in] len           Length of the buffer
+ * @param[in] remote        Destination for the packet
+ * @param[in] local         Local endpoint to send from, may be NULL
+ * @param[in] resp_handler  Callback when response received, may be NULL
+ * @param[in] context       User defined context passed to the response handler
+ * @param[in] tl_type       The transport type to use for send. When
+ *                          @ref GCOAP_SOCKET_TYPE_UNDEF is selected, the highest
+ *                          available (by value) will be selected. Only single
+ *                          types are allowed, not a combination of them.
+ *
+ * @note The highest supported (by value) gcoap_socket_type_t will be selected
+ *       as transport type.
+ *
+ * @return  length of the packet
+ * @return -ENOTCONN, if DTLS was used and session establishment failed
+ * @return -EINVAL, if @p tl_type is is not supported
+ * @return  0 if cannot send
+ */
+ssize_t gcoap_req_send(const uint8_t *buf, size_t len,
+                       const sock_udp_ep_t *remote, const sock_udp_ep_t *local,
+                       gcoap_resp_handler_t resp_handler, void *context,
+                       gcoap_socket_type_t tl_type);
+
+/**
+ * @brief   Sends a buffer containing a CoAP request to the provided endpoint
+ *
+ * @deprecated Will be removed after the 2023.10 release. Use alias @ref gcoap_req_send() instead.
  *
  * @param[in] buf           Buffer containing the PDU
  * @param[in] len           Length of the buffer
@@ -976,34 +1045,12 @@ static inline ssize_t gcoap_request(coap_pkt_t *pdu, uint8_t *buf, size_t len,
  * @return -EINVAL, if @p tl_type is is not supported
  * @return  0 if cannot send
  */
-ssize_t gcoap_req_send_tl(const uint8_t *buf, size_t len,
-                          const sock_udp_ep_t *remote,
-                          gcoap_resp_handler_t resp_handler, void *context,
-                          gcoap_socket_type_t tl_type);
-
-/**
- * @brief   Sends a buffer containing a CoAP request to the provided endpoint
- *
- * @param[in] buf           Buffer containing the PDU
- * @param[in] len           Length of the buffer
- * @param[in] remote        Destination for the packet
- * @param[in] resp_handler  Callback when response received, may be NULL
- * @param[in] context       User defined context passed to the response handler
- *
- * @note The highest supported (by value) gcoap_socket_type_t will be selected
- *       as transport type.
- *
- * @return  length of the packet
- * @return -ENOTCONN, if DTLS was used and session establishment failed
- * @return  0 if cannot send
- */
-static inline ssize_t gcoap_req_send(const uint8_t *buf, size_t len,
-                                     const sock_udp_ep_t *remote,
-                                     gcoap_resp_handler_t resp_handler,
-                                     void *context)
+static inline ssize_t gcoap_req_send_tl(const uint8_t *buf, size_t len,
+                                        const sock_udp_ep_t *remote,
+                                        gcoap_resp_handler_t resp_handler, void *context,
+                                        gcoap_socket_type_t tl_type)
 {
-    return gcoap_req_send_tl(buf, len, remote, resp_handler, context,
-                             GCOAP_SOCKET_TYPE_UNDEF);
+    return gcoap_req_send(buf, len, remote, NULL, resp_handler, context, tl_type);
 }
 
 /**
@@ -1046,6 +1093,9 @@ static inline ssize_t gcoap_response(coap_pkt_t *pdu, uint8_t *buf,
  *
  * First verifies that an observer has been registered for the resource.
  *
+ * @post    If this function returns @see GCOAP_OBS_INIT_OK you have to call
+ *          @ref gcoap_obs_send() afterwards to release a mutex.
+ *
  * @param[out] pdu      Notification metadata
  * @param[out] buf      Buffer containing the PDU
  * @param[in] len       Length of the buffer
@@ -1073,6 +1123,37 @@ int gcoap_obs_init(coap_pkt_t *pdu, uint8_t *buf, size_t len,
  */
 size_t gcoap_obs_send(const uint8_t *buf, size_t len,
                       const coap_resource_t *resource);
+
+/**
+ * @brief   Forgets (invalidates) an existing observe request.
+ *
+ * This invalidates the internal (local) observe request state without actually
+ * sending a deregistration request to the server. Ths mechanism may be referred
+ * to as passive deregistration, as it does not send a deregistration request.
+ * This is implemented according to the description in RFC 7641,
+ * Section 3.6 (Cancellation): 'A client that is no longer interested in
+ * receiving notifications for a resource can simply "forget" the observation.'
+ * Successfully invalidating the request by calling this function guarantees
+ * that the corresponding observe response handler will not be called anymore.
+ *
+ * NOTE: There are cases were active deregistration is preferred instead.
+ * A server may continue sending notifications if it chooses to ignore the RST
+ * which is meant to indicate the client did not recognize the notification.
+ * For such server implementations this function must be called *before*
+ * sending an explicit deregister request (i.e., a GET request with the token
+ * of the registration and the observe option set to COAP_OBS_DEREGISTER).
+ * This will instruct the server to stop sending further notifications.
+ *
+ * @param[in] remote    remote endpoint that hosts the observed resource
+ * @param[in] token     token of the original GET request used for registering
+ *                      an observe
+ * @param[in] tokenlen  the length of the token in bytes
+ *
+ * @return  0 on success
+ * @return  < 0 on error
+ */
+int gcoap_obs_req_forget(const sock_udp_ep_t *remote, const uint8_t *token,
+                         size_t tokenlen);
 
 /**
  * @brief   Provides important operational statistics
