@@ -180,6 +180,9 @@ typedef struct _nib_onl_entry {
      */
     uint8_t l2addr_len;
 #endif
+#if IS_ACTIVE(CONFIG_GNRC_IPV6_NIB_QUEUE_PKT) || defined(DOXYGEN)
+    uint8_t pktqueue_len; /**< Number of queued packets (in pktqueue) */
+#endif
 } _nib_onl_entry_t;
 
 /**
@@ -257,6 +260,51 @@ extern evtimer_msg_t _nib_evtimer;
  * Exposed to be settable by @ref net_gnrc_ipv6_nib_ft.
  */
 extern _nib_dr_entry_t *_prime_def_router;
+
+/**
+ * @brief   Looks up if an event is queued in the event timer
+ *
+ * @param[in] ctx   Context of the event. May be NULL for any event context.
+ * @param[in] type  [Type of the event](@ref net_gnrc_ipv6_nib_msg).
+ *
+ * @return  Milliseconds to the event, if event in queue.
+ * @return  UINT32_MAX, event is not in queue.
+ */
+uint32_t _evtimer_lookup(const void *ctx, uint16_t type);
+
+/**
+ * @brief   Removes an event from the event timer
+ *
+ * @param[in] event Representation of the event.
+ */
+static inline void _evtimer_del(evtimer_msg_event_t *event)
+{
+    evtimer_del(&_nib_evtimer, &event->event);
+}
+
+/**
+ * @brief   Adds an event to the event timer
+ *
+ * @param[in] ctx       The context of the event
+ * @param[in] type      [Type of the event](@ref net_gnrc_ipv6_nib_msg).
+ * @param[in,out] event Representation of the event.
+ * @param[in] offset    Offset in milliseconds to the event.
+ */
+static inline void _evtimer_add(void *ctx, int16_t type,
+                                evtimer_msg_event_t *event, uint32_t offset)
+{
+#ifdef MODULE_GNRC_IPV6
+    kernel_pid_t target_pid = gnrc_ipv6_pid;
+#else
+    kernel_pid_t target_pid = KERNEL_PID_LAST;  /* just for testing */
+#endif
+    _evtimer_del(event);
+    event->event.next = NULL;
+    event->event.offset = offset;
+    event->msg.type = type;
+    event->msg.content.ptr = ctx;
+    evtimer_add_msg(&_nib_evtimer, event, target_pid);
+}
 
 /**
  * @brief   Initializes NIB internally
@@ -733,6 +781,7 @@ static inline _nib_offl_entry_t *_nib_ft_add(const ipv6_addr_t *next_hop,
  */
 static inline void _nib_ft_remove(_nib_offl_entry_t *nib_offl)
 {
+    _evtimer_del(&nib_offl->route_timeout);
     _nib_offl_remove(nib_offl, _FT);
 }
 #endif  /* CONFIG_GNRC_IPV6_NIB_ROUTER */
@@ -826,50 +875,40 @@ void _nib_ft_get(const _nib_offl_entry_t *dst, gnrc_ipv6_nib_ft_t *fte);
 int _nib_get_route(const ipv6_addr_t *dst, gnrc_pktsnip_t *ctx,
                    gnrc_ipv6_nib_ft_t *entry);
 
+#if IS_ACTIVE(CONFIG_GNRC_IPV6_NIB_QUEUE_PKT) || DOXYGEN
 /**
- * @brief   Looks up if an event is queued in the event timer
+ * @brief Flush the packet queue of a on-link neighbor.
  *
- * @param[in] ctx   Context of the event. May be NULL for any event context.
- * @param[in] type  [Type of the event](@ref net_gnrc_ipv6_nib_msg).
- *
- * @return  Milliseconds to the event, if event in queue.
- * @return  UINT32_MAX, event is not in queue.
+ * @param node neighbor entry to be flushed
  */
-uint32_t _evtimer_lookup(const void *ctx, uint16_t type);
+void _nbr_flush_pktqueue(_nib_onl_entry_t *node);
 
 /**
- * @brief   Removes an event from the event timer
+ * @brief Remove oldest packet from a on-link neighbor's packet queue.
  *
- * @param[in] event Representation of the event.
+ * @param node neighbor entry
+ *
+ * @retval pointer to the packet entry or NULL if the queue is empty
  */
-static inline void _evtimer_del(evtimer_msg_event_t *event)
-{
-    evtimer_del(&_nib_evtimer, &event->event);
-}
+gnrc_pktqueue_t *_nbr_pop_pkt(_nib_onl_entry_t *node);
 
 /**
- * @brief   Adds an event to the event timer
+ * @brief Push packet to a on-link neighbor's packet queue.
  *
- * @param[in] ctx       The context of the event
- * @param[in] type      [Type of the event](@ref net_gnrc_ipv6_nib_msg).
- * @param[in,out] event Representation of the event.
- * @param[in] offset    Offset in milliseconds to the event.
+ * If there are already @ref CONFIG_GNRC_IPV6_NIB_NBR_QUEUE_CAP packets queued,
+ * the oldest will be dropped silently.
+ *
+ * @pre Neighbor is INCOMPLETE.
+ *
+ * @param node neighbor entry
+ * @param pkt packet to be pushed
  */
-static inline void _evtimer_add(void *ctx, int16_t type,
-                                evtimer_msg_event_t *event, uint32_t offset)
-{
-#ifdef MODULE_GNRC_IPV6
-    kernel_pid_t target_pid = gnrc_ipv6_pid;
+void _nbr_push_pkt(_nib_onl_entry_t *node, gnrc_pktqueue_t *pkt);
 #else
-    kernel_pid_t target_pid = KERNEL_PID_LAST;  /* just for testing */
+#define _nbr_flush_pktqueue(node) ((void)node)
+#define _nbr_pop_pkt(node) ((void)node, NULL)
+#define _nbr_push_pkt(node, pkt) ((void)node, (void)pkt)
 #endif
-    _evtimer_del(event);
-    event->event.next = NULL;
-    event->event.offset = offset;
-    event->msg.type = type;
-    event->msg.content.ptr = ctx;
-    evtimer_add_msg(&_nib_evtimer, event, target_pid);
-}
 
 #ifdef __cplusplus
 }

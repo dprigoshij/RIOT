@@ -61,7 +61,7 @@ void usbus_init(usbus_t *usbus, usbdev_t *usbdev)
 void usbus_create(char *stack, int stacksize, char priority,
                   const char *name, usbus_t *usbus)
 {
-    int res = thread_create(stack, stacksize, priority, THREAD_CREATE_STACKTEST,
+    int res = thread_create(stack, stacksize, priority, 0,
                             _usbus_thread, (void *)usbus, name);
 
     (void)res;
@@ -352,8 +352,8 @@ static bool _urb_transfer_complete(usbus_t *usbus, usbdev_ep_t *ep,
                 _usbus_transfer_urb_submit(usbus_ep, next_urb);
             }
 
-            DEBUG("Done with the transfer, available: %u, len: %u\n",
-                  (unsigned)active_urb->transferred, (unsigned)active_urb->len);
+            DEBUG("Done with the transfer, available: %" PRIuSIZE ", len: %" PRIuSIZE "\n",
+                  active_urb->transferred, active_urb->len);
             handler->driver->transfer_handler(usbus, handler, ep,
                                               USBUS_EVENT_TRANSFER_COMPLETE);
         }
@@ -422,7 +422,7 @@ static void *_usbus_thread(void *args)
                   "USB serial byte length must be at most 63 due to protocol "
                   "limitations");
     uint8_t luid_buf[CONFIG_USB_SERIAL_BYTE_LENGTH];
-    luid_get(luid_buf, sizeof(luid_buf));
+    luid_base(luid_buf, sizeof(luid_buf));
     fmt_bytes_hex(usbus->serial_str, luid_buf, sizeof(luid_buf));
     usbus_add_string_descriptor(usbus, &usbus->serial, usbus->serial_str);
 #endif

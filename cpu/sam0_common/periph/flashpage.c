@@ -58,9 +58,9 @@
 static inline void wait_nvm_is_ready(void)
 {
 #ifdef NVMCTRL_STATUS_READY
-    while (!_NVMCTRL->STATUS.bit.READY) {}
+    while (!(_NVMCTRL->STATUS.reg & NVMCTRL_STATUS_READY)) {}
 #else
-    while (!_NVMCTRL->INTFLAG.bit.READY) {}
+    while (!(_NVMCTRL->INTFLAG.reg & NVMCTRL_INTFLAG_READY)) {}
 #endif
 }
 
@@ -71,6 +71,12 @@ static void _unlock(void)
     PAC->WRCTRL.reg = (PAC_WRCTRL_KEY_CLR | ID_NVMCTRL);
 #else
     PAC1->WPCLR.reg = PAC1_WPROT_DEFAULT_VAL;
+#endif
+
+    /* NVM reads could be corrupted when mixing NVM reads with Page Buffer writes. */
+#ifdef NVMCTRL_CTRLA_CACHEDIS1
+    _NVMCTRL->CTRLA.reg |= NVMCTRL_CTRLA_CACHEDIS0
+                        |  NVMCTRL_CTRLA_CACHEDIS1;
 #endif
 }
 
@@ -85,9 +91,14 @@ static void _lock(void)
     PAC1->WPSET.reg = PAC1_WPROT_DEFAULT_VAL;
 #endif
 
+#ifdef NVMCTRL_CTRLA_CACHEDIS1
+    _NVMCTRL->CTRLA.reg &= ~NVMCTRL_CTRLA_CACHEDIS0
+                        &  ~NVMCTRL_CTRLA_CACHEDIS1;
+#endif
+
     /* cached flash contents may have changed - invalidate cache */
 #ifdef CMCC
-    CMCC->MAINT0.bit.INVALL = 1;
+    CMCC->MAINT0.reg |= CMCC_MAINT0_INVALL;
 #endif
 }
 

@@ -82,6 +82,26 @@ extern "C" {
 #define SHT3X_PARAM_I2C_ADDR   (SHT3X_I2C_ADDR_1)  /**< I2C address */
 /** @} */
 
+/**
+ * @name    LSM6DSXX accelerometer sensor configuration
+ * @{
+ */
+#define LSM6DSXX_PARAM_I2C I2C_DEV(0)
+#define LSM6DSXX_PARAM_ADDR (0x6A)
+/** @} */
+
+/**
+ * @name    WS281x RGB LEDs configuration
+ * @{
+ */
+#ifndef WS281X_PARAM_PIN
+#define WS281X_PARAM_PIN    GPIO_PIN(0, 16) /**< GPIO pin connected to the data pin of the first LED */
+#endif
+#ifndef WS281X_PARAM_NUMOF
+#define WS281X_PARAM_NUMOF  (1U)      /**< Number of LEDs chained */
+#endif
+/** @} */
+
 #ifdef __cplusplus
 }
 #endif

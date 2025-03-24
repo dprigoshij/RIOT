@@ -30,7 +30,7 @@ extern "C" {
  * usage, we define the default stack size values here centrally for all CPU
  * implementations.
  *
- * If needed, you can overwrite these values the the `cpu_conf.h` file of the
+ * If needed, you can overwrite these values the `cpu_conf.h` file of the
  * specific CPU implementation.
  *
  * @todo Adjust values for Cortex-M4F with FPU?
@@ -169,6 +169,14 @@ extern "C" {
  * @brief   This arch uses the inlined irq API.
  */
 #define IRQ_API_INLINED     (1)
+
+#if defined(CPU_CORE_CORTEX_M0) || defined(CPU_CORE_CORTEX_M0PLUS) \
+ || defined(CPU_CORE_CORTEX_M23)
+/**
+ * @brief   CPU cycles per busy wait loop
+ */
+#define CPU_CYCLES_PER_LOOP (4)
+#endif
 
 #ifdef __cplusplus
 }

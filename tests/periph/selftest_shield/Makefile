@@ -18,6 +18,7 @@ FEATURES_OPTIONAL += periph_i2c
 FEATURES_OPTIONAL += periph_pwm
 FEATURES_OPTIONAL += periph_spi
 FEATURES_OPTIONAL += periph_timer
+FEATURES_OPTIONAL += periph_timer_query_freqs
 FEATURES_OPTIONAL += periph_uart
 
 USEMODULE += tiny_strerror
@@ -27,7 +28,7 @@ DETAILED_OUTPUT ?= 0
 
 include $(RIOTBASE)/Makefile.include
 
-ifneq ($(MCU),esp32)
+ifneq ($(CPU),esp32)
   # We only need 1 thread (+ the Idle thread on some platforms) and we really
   # want this app working on as many boards as possible
   CFLAGS += -DMAXTHREADS=2

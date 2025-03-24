@@ -16,15 +16,16 @@ EXT_CFLAGS := -D__TARGET_RIOT
 CFLAGS += -Wno-cast-align
 
 # disable warnings when compiling with LLVM for board native
-ifeq ($(TOOLCHAIN)_$(BOARD),llvm_native)
+ifeq ($(TOOLCHAIN)_$(CPU),llvm_native)
   CFLAGS += -Wno-macro-redefined -Wno-gnu-folding-constant
   EXT_CFLAGS += -Wno-conversion
-else ifeq ($(OS)_$(BOARD),FreeBSD_native)
+else ifeq ($(OS)_$(CPU),FreeBSD_native)
   EXT_CFLAGS += -Wno-conversion
 else ifeq (esp32,$(CPU))
   # The ESP-IDF uses #include_next that causes errors when compiling with warnings
   # that are enabled by jerryscript build system so disable them for these CPUs:
   EXT_CFLAGS += -Wno-pedantic
+  EXT_CFLAGS += -Wno-maybe-uninitialized
 else ifeq (esp8266,$(CPU))
   # The esp8266 C newlib version 3.0.0 has errors when compiling with warnings
   # that are enabled by jerryscript build system so disable them for this cpu:

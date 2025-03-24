@@ -32,7 +32,7 @@ ifneq (,$(filter esp_ble,$(USEMODULE)))
 endif
 
 ifneq (,$(filter esp_eth,$(USEMODULE)))
-  FEATURES_REQUIRED += esp_eth
+  FEATURES_REQUIRED += periph_eth
   USEMODULE += esp_idf_eth
   USEMODULE += esp_idf_event
   USEMODULE += esp_idf_gpio
@@ -103,6 +103,11 @@ ifneq (,$(filter periph_i2c,$(USEMODULE)))
     USEMODULE += esp_i2c_sw
     USEMODULE += periph_i2c_sw
   endif
+endif
+
+ifneq (,$(filter periph_sdmmc,$(USEMODULE)))
+  USEMODULE += esp_idf_sdmmc
+  USEMODULE += periph_gpio_irq
 endif
 
 ifneq (,$(filter esp_spi_ram,$(USEMODULE)))

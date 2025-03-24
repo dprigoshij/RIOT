@@ -30,10 +30,11 @@ PARSERS = {
 
 class RIOTCtrlAppFactory(RIOTCtrlBoardFactory):
 
-    def __init__(self):
+    def __init__(self, board='native'):
         super().__init__(board_cls={
-            'native': native.NativeRIOTCtrl,
+            board: native.NativeRIOTCtrl,
         })
+        self.board = board
         self.ctrl_list = list()
 
     def __enter__(self):
@@ -43,7 +44,9 @@ class RIOTCtrlAppFactory(RIOTCtrlBoardFactory):
         for ctrl in self.ctrl_list:
             ctrl.stop_term()
 
-    def get_shell(self, application_directory='.', env={'BOARD': 'native'}):
+    def get_shell(self, application_directory='.', env=None):
+        if env is None:
+            env = {'BOARD': self.board}
         # retrieve a RIOTCtrl Object
         ctrl = super().get_ctrl(
             env=env,
@@ -127,7 +130,7 @@ def test_fragmentation(factory, zep_dispatch):
         # 2 intermediate hops, 64 - 2
         assert_result(result, 34, 1, 64 - 2)
 
-        result = parser.parse(D.ping6(root_addr, count=100, interval=30, packet_size=500))
+        result = parser.parse(D.ping6(root_addr, count=100, interval=200, packet_size=500))
         # assert packetloss is under 90%
         # assert at least one response
         # 2 intermediate hops, 64 - 2
@@ -153,5 +156,11 @@ def run_zep_dispatch():
 
 
 if __name__ == "__main__":
-    with RIOTCtrlAppFactory() as factory, run_zep_dispatch() as zep_dispatch:
+    board = os.environ.get('BOARD', 'native')
+    if board not in ['native', 'native64']:
+        print('\x1b[1;31mThis test requires a native board.\x1b[0m\n',
+              file=sys.stderr)
+        sys.exit(1)
+
+    with RIOTCtrlAppFactory(board) as factory, run_zep_dispatch() as zep_dispatch:
         test_fragmentation(factory, zep_dispatch)

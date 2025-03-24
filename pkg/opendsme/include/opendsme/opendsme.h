@@ -40,14 +40,14 @@
  * of a series of superframes that repeat indefinitely. A superframe consists
  * of a Beacon Slot, a Contention Access Period and Contention Free Period.
  *
- *    BS                 CAP                      CFP        BS
- *   +------------------------------------------------------+----
- *   |   |                                |--|--|--|--|--|--|   | ...
- *   |   |                                |--|--|--|--|--|--|   |
- *   |   |                                |--|--|--|--|--|--|   | ...
- *   |   |                                |--|--|--|--|--|--|   |
- *   +---+--------------------------------+--+--+--+--+--+--+---+
- *   <------------------- Superframe ----------------------->
+ *      BS                 CAP                      CFP        BS
+ *     +------------------------------------------------------+----
+ *     |   |                                |--|--|--|--|--|--|   | ...
+ *     |   |                                |--|--|--|--|--|--|   |
+ *     |   |                                |--|--|--|--|--|--|   | ...
+ *     |   |                                |--|--|--|--|--|--|   |
+ *     +---+--------------------------------+--+--+--+--+--+--+---+
+ *     <------------------- Superframe ----------------------->
  *
  * Each period of the superframe serves a dedicated purpose:
  * - Beacon Slot: Used for beacon transmission. PAN Coordinators and Coordinators
@@ -85,7 +85,7 @@
  * superframes per multisuperframe.
  *
  * Joining devices scan for beacons and perform the association procedure with
- * the the (PAN) coordinator. On success, the device is ready to communicate with
+ * the (PAN) coordinator. On success, the device is ready to communicate with
  * other devices in the DSME network.
  * To extend the network, coordinator devices can associate to any other
  * coordinator (including the PAN coordinator) and start emitting beacons in a

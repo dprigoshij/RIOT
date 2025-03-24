@@ -19,6 +19,7 @@
 #include "periph/can.h"
 #include "can/device.h"
 #include "can_params.h"
+#include "periph_conf.h"
 
 #define CANDEV_NUMOF (ARRAY_SIZE(candev_params))
 
@@ -46,6 +47,9 @@ void auto_init_periph_can(void) {
 #ifdef MODULE_CAN_PM
         candev_dev[i].rx_inactivity_timeout = candev_params[i].rx_inactivity_timeout;
         candev_dev[i].tx_wakeup_timeout = candev_params[i].tx_wakeup_timeout;
+#endif
+#ifdef MODULE_FDCAN
+        candev_dev[i].loop_delay = candev_params[i].loop_delay;
 #endif
 
         can_device_init(_can_stacks[i], CANDEV_STACKSIZE, CANDEV_BASE_PRIORITY + i,

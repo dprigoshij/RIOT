@@ -7,16 +7,11 @@
  */
 
 /**
- * @ingroup     cpu_native
- * @ingroup     drivers_periph_qdec
- * @{
- *
  * @file
- * @brief       Low-level QDEC driver implementation
- *
- * @author      Gilles DOFFE <g.doffe@gmail.com>
- *
- * @}
+ * @ingroup cpu_native
+ * @ingroup drivers_periph_qdec
+ * @brief   Low-level QDEC driver implementation
+ * @author  Gilles DOFFE <g.doffe@gmail.com>
  */
 
 #include <time.h>
@@ -71,9 +66,7 @@ int32_t qdec_init(qdec_t qdec, qdec_mode_t mode, qdec_cb_t cb, void *arg)
     }
 
     /* Initialize qdec channels */
-    for (uint8_t i = 0; i < QDEC_NUMOF; i++) {
-        qdecs[qdec] = 0;
-    }
+    qdecs[qdec] = 0;
 
     /* Reset counter and start qdec */
     qdec_start(qdec);
