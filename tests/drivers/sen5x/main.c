@@ -24,7 +24,7 @@
 #include "sen5x_constants.h"
 #include "ztimer.h"
 
-#define TEST_ITERATIONS (100)
+
 #define MEASUREMENT_INTERVAL_USECS (2000000)
 
 sen5x_t device;
@@ -38,7 +38,7 @@ int main(void)
     sen5x_wake(&device);
     ztimer_sleep(ZTIMER_USEC, 500000);
 
-    for(int i = 0; i < TEST_ITERATIONS; i++) {
+    while(1) {
         sen5x_read_values(&device, &values);
         ztimer_sleep(ZTIMER_USEC, MEASUREMENT_INTERVAL_USECS);
 
