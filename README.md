@@ -4,7 +4,7 @@
 [![API docs][api-badge]][api-link]
 [![Wiki][wiki-badge]][wiki-link]
 [![Stack Overflow questions][stackoverflow-badge]][stackoverflow-link]
-[![Twitter][twitter-badge]][twitter-link]
+[![Mastodon][mastodon-badge]][mastodon-link]
 [![Matrix][matrix-badge]][matrix-link]
 
 <p align="center"><img src="doc/doxygen/src/riot-logo.svg" width="66%"><!--
@@ -36,8 +36,9 @@
 
 The friendly Operating System for IoT!
 
-RIOT is a real-time multi-threading operating system that supports a range of
-devices that are typically found in the Internet of Things (IoT):
+RIOT is an open-source microcontroller operating system, designed to match
+the requirements of Internet of Things (IoT) devices and other embedded devices.
+It supports a range of devices that are typically found in the Internet of Things (IoT):
 8-bit, 16-bit and 32-bit microcontrollers.
 
 RIOT is based on the following design principles: energy-efficiency, real-time
@@ -52,7 +53,7 @@ indirect business models around the free open-source software platform
 provided by RIOT, e.g. it is possible to link closed-source code with the
 LGPL code.
 
-## FEATURES
+## Features
 
 RIOT provides features including, but not limited to:
 
@@ -81,7 +82,7 @@ RIOT provides features including, but not limited to:
 * UWB
 * Bluetooth (BLE) via [NimBLE](https://github.com/apache/mynewt-nimble)
 
-## GETTING RIOT
+## Getting RIOT
 
 The most convenient way to get RIOT is to clone it via Git
 
@@ -106,7 +107,7 @@ For more details on our release cycle, check our [documentation][release cycle].
 [releases]: https://github.com/RIOT-OS/RIOT/releases
 [release cycle]: https://doc.riot-os.org/release-cycle.html
 
-## GETTING STARTED
+## Getting Started
 * You want to start the RIOT? Just follow our
 [quickstart guide](https://doc.riot-os.org/index.html#the-quickest-start) or
 try this
@@ -117,23 +118,52 @@ For specific toolchain installation, follow instructions in the
   version of the documentation is uploaded daily to
   [doc.riot-os.org](https://doc.riot-os.org).
 
-## FORUM
-Do you have a question, want to discuss a new feature, or just want to present
-your latest project using RIOT? Come over to our [forum] and post to your hearts
-content.
+Using Windows? Use [this guide][dev-setup-windows] to
+[setup the development environment][dev-setup-windows].
 
-[forum]: https://forum.riot-os.org
+[dev-setup-windows]: doc/guides/setup-windows
 
-## CONTRIBUTE
+## Community
+
+You can ask for help on the Forum or on Matrix. Please send bug reports and
+feature requests to our [GitHub issue tracker](https://github.com/RIOT-OS/RIOT/issues)
+
+- [forum](https://forum.riot-os.org) is the default place to start asking for
+help. Our Forum provides an archive of prior questions and answers.
+- For chat, we use
+  [#riot-os:matrix.org](https://matrix.to/#/#riot-os:matrix.org) on the
+  [Matrix](https://matrix.org/) chat network.
+- [GitHub Issue tracker](https://github.com/RIOT-OS/RIOT/issues) for issues
+with the code and documentation.
+
+### Governance
+
+For how our community is structured and governed, please see our [governance document].
+
+[governance document]: GOVERNANCE.md
+
+### How to Ask
+
+Please include as much detail as you can that is relevant to your question, not
+only "this isn't working". These details include:
+
+1. What you want to achieve.
+2. What have you tried so far (for example the commands you typed).
+3. What happened so far.
+
+### Collaboration
+
+RIOT closely collaborates with and inspires other open source projects, e.g., [Ariel OS](https://ariel-os.org/), an IoT OS written in Rust. We are more than happy to collaborate with those who share our [vision](https://doc.riot-os.org/vision.html).
+
+## Contribute
 
 To contribute something to RIOT, please refer to our
 [contributing document](CONTRIBUTING.md).
 
-## MAILING LISTS
-* RIOT commits: [commits@riot-os.org](https://lists.riot-os.org/mailman/listinfo/commits)
+## Mailing Lists
 * Github notifications: [notifications@riot-os.org](https://lists.riot-os.org/mailman/listinfo/notifications)
 
-## LICENSE
+## License
 * Most of the code developed by the RIOT community is licensed under the GNU
   Lesser General Public License (LGPL) version 2.1 as published by the Free
   Software Foundation.
@@ -160,7 +190,7 @@ https://www.riot-os.org
 [release-link]: https://github.com/RIOT-OS/RIOT/releases/latest
 [stackoverflow-badge]: https://img.shields.io/badge/stackoverflow-%5Briot--os%5D-yellow
 [stackoverflow-link]: https://stackoverflow.com/questions/tagged/riot-os
-[twitter-badge]: https://img.shields.io/badge/social-Twitter-informational.svg
-[twitter-link]: https://twitter.com/RIOT_OS
+[mastodon-badge]: https://img.shields.io/badge/social-Mastodon-informational.svg
+[mastodon-link]: https://fosstodon.org/@RIOT_OS
 [wiki-badge]: https://img.shields.io/badge/docs-Wiki-informational.svg
 [wiki-link]: https://github.com/RIOT-OS/RIOT/wiki

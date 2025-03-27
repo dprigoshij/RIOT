@@ -36,6 +36,7 @@
 
 #include "ztimer.h"
 #include "tlsf.h"
+#include "random.h"
 
 #include "lwm2m_platform.h"
 #include "lwm2m_client_config.h"
@@ -50,7 +51,7 @@ typedef struct {
 
  static void _tlsf_size_walker(void* ptr, size_t size, int used, void* user)
 {
-    printf("\t%p %s size: %u (%p)\n", ptr, used ? "used" : "free", (unsigned int)size, ptr);
+    printf("\t%p %s size: %" PRIuSIZE " (%p)\n", ptr, used ? "used" : "free", size, ptr);
 
      if (used) {
         ((_tlsf_size_container_t *)user)->used += (unsigned int)size;
@@ -104,6 +105,10 @@ int lwm2m_strncmp(const char *s1, const char *s2, size_t n)
 time_t lwm2m_gettime(void)
 {
     return (time_t)(ztimer_now(ZTIMER_SEC));
+}
+
+int lwm2m_seed(void) {
+    return random_uint32();
 }
 
 /* For clang we need to specify that the first argument will be a format string

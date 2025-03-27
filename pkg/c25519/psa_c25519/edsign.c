@@ -36,6 +36,18 @@ psa_status_t psa_generate_ecc_ed25519_key_pair( uint8_t *priv_key_buffer, uint8_
     return PSA_SUCCESS;
 }
 
+psa_status_t psa_derive_ecc_ed25519_public_key( const uint8_t *priv_key_buffer, uint8_t *pub_key_buffer,
+                                                size_t priv_key_buffer_length,
+                                                size_t *pub_key_buffer_length)
+{
+    *pub_key_buffer_length = EDSIGN_PUBLIC_KEY_SIZE;
+
+    edsign_sec_to_pub(pub_key_buffer, priv_key_buffer);
+
+    (void)priv_key_buffer_length;
+    return PSA_SUCCESS;
+}
+
 psa_status_t psa_ecc_ed25519_sign_message(  const uint8_t *priv_key_buffer,
                                             size_t priv_key_buffer_size,
                                             const uint8_t *pub_key_buffer,
@@ -73,7 +85,7 @@ psa_status_t psa_ecc_ed25519_verify_message(const uint8_t *key_buffer,
 
     ret = edsign_verify(signature, key_buffer, input, input_length);
     if (!ret) {
-        return PSA_ERROR_GENERIC_ERROR;
+        return PSA_ERROR_INVALID_SIGNATURE;
     }
 
     (void)key_buffer_size;

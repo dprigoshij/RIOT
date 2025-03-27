@@ -7,17 +7,15 @@
  */
 
 /**
- * @ingroup cpu_native
- * @{
- *
  * @file
- * @brief       Crash handling functions implementation for 'native' port
- *
- * @author      Ludwig Knüpfer <ludwig.knuepfer@fu-berlin.de>
- * @author      Kévin Roussel <Kevin.Roussel@inria.fr>
- * @author      Oliver Hahm <oliver.hahm@inria.fr>
+ * @ingroup cpu_native
+ * @brief   Crash handling functions implementation for 'native' port
+ * @author  Ludwig Knüpfer <ludwig.knuepfer@fu-berlin.de>
+ * @author  Kévin Roussel <Kevin.Roussel@inria.fr>
+ * @author  Oliver Hahm <oliver.hahm@inria.fr>
  */
 
+#include <errno.h>
 #include <unistd.h>
 #include <signal.h>
 
@@ -25,6 +23,9 @@
 
 void panic_arch(void)
 {
+    extern unsigned _native_retval;
+    _native_retval = EINVAL;
+
 #ifdef DEVELHELP
     /* since we're atop an Unix-like platform,
        just use the (developer-)friendly core-dump feature */

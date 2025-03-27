@@ -1,6 +1,4 @@
-/**
- * Multiple asynchronous read on file descriptors
- *
+/*
  * Copyright (C) 2015 Ludwig Knüpfer <ludwig.knuepfer@fu-berlin.de>,
  *                    Martine Lenders <mlenders@inf.fu-berlin.de>
  *                    Kaspar Schleiser <kaspar@schleiser.de>
@@ -10,10 +8,12 @@
  * This file is subject to the terms and conditions of the GNU Lesser
  * General Public License v2.1. See the file LICENSE in the top level
  * directory for more details.
- *
- * @ingroup cpu_native
- * @{
+ */
+
+/**
  * @file
+ * @brief   Multiple asynchronous read on file descriptors
+ * @ingroup cpu_native
  * @author  Takuo Yonezawa <Yonezawa-T2@mail.dnp.co.jp>
  */
 
@@ -45,14 +45,17 @@ static void _async_io_isr(void) {
 }
 
 void native_async_read_setup(void) {
-    register_interrupt(SIGIO, _async_io_isr);
+    native_register_interrupt(SIGIO, _async_io_isr);
 }
 
 void native_async_read_cleanup(void) {
-    unregister_interrupt(SIGIO);
+    native_unregister_interrupt(SIGIO);
 
     for (int i = 0; i < _next_index; i++) {
-        real_close(_fds[i].fd);
+        /* don't close stdin */
+        if (_fds[i].fd != STDIN_FILENO) {
+            real_close(_fds[i].fd);
+        }
         if (pollers[i].child_pid) {
             kill(pollers[i].child_pid, SIGKILL);
         }
@@ -95,6 +98,34 @@ void native_async_read_add_handler(int fd, void *arg, native_async_read_callback
     }
 
     _next_index++;
+}
+
+void native_async_read_remove_handler(int fd)
+{
+    int res = real_fcntl(fd, F_GETFL);
+    if (res < 0) {
+        err(EXIT_FAILURE, "native_async_read_remove_handler(): fcntl(F_GETFL)");
+    }
+    unsigned flags = (unsigned)res & ~O_ASYNC;
+    res = real_fcntl(fd, F_SETFL, flags);
+    if (res < 0) {
+        err(EXIT_FAILURE, "native_async_read_remove_handler(): fcntl(F_SETFL)");
+    }
+
+    unsigned i;
+    for (i = 0; (i < (unsigned)_next_index) && (_fds[i].fd != fd); i++) { };
+    if (i == (unsigned)_next_index) {
+        return;
+    }
+
+    native_unregister_interrupt(SIGIO);
+    for (; i < (unsigned)_next_index - 1; i++) {
+        _fds[i] = _fds[i + 1];
+    }
+    _next_index--;
+    native_register_interrupt(SIGIO, _async_io_isr);
+
+    _fds[_next_index] = (struct pollfd){ 0 };
 }
 
 void native_async_read_add_int_handler(int fd, void *arg, native_async_read_callback_t handler) {
@@ -151,4 +182,3 @@ static void _sigio_child(int index)
         sigwait(&sigmask, &sig);
     }
 }
-/** @} */

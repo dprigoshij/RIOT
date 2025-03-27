@@ -12,11 +12,29 @@ STDIO_MODULES = \
   stdio_telnet \
   stdio_tinyusb_cdc_acm \
   stdio_usb_serial_jtag \
+  stdio_fb \
+  #
+
+STDIO_LEGACY_MODULES = \
+  ethos_stdio \
+  stdio_ethos \
   #
 
 # select stdio_uart if no other stdio module is slected
 ifeq (,$(filter $(STDIO_MODULES),$(USEMODULE)))
   USEMODULE += stdio_uart
+endif
+
+ifeq (,$(filter $(STDIO_LEGACY_MODULES),$(USEMODULE)))
+  USEMODULE += stdio
+endif
+
+ifneq (,$(filter stdin,$(USEMODULE)))
+  USEMODULE += isrpipe
+endif
+
+ifneq (1, $(words $(sort $(filter $(STDIO_MODULES),$(USEMODULE)))))
+  USEMODULE += stdio_dispatch
 endif
 
 ifneq (,$(filter stdio_cdc_acm,$(USEMODULE)))
@@ -78,6 +96,7 @@ endif
 
 ifneq (,$(filter stdio_udp,$(USEMODULE)))
   USEMODULE += sock_udp
+  USEMODULE += sock_async
 endif
 
 # enable stdout buffering for modules that benefit from sending out buffers in larger chunks

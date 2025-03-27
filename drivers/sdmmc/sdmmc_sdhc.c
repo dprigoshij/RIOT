@@ -46,7 +46,7 @@
 #define ENABLE_DEBUG 0
 #include "debug.h"
 
-#if defined(MCU_SAMD5X) || defined(MCU_SAME5X)
+#if defined(CPU_SAMD5X) || defined(CPU_SAME5X)
 
 #ifndef SDHC_CLOCK
 #define SDHC_CLOCK          SAM0_GCLK_MAIN
@@ -57,7 +57,7 @@
 #endif
 
 #else
-#error "MCU not supported"
+#error "CPU not supported"
 #endif
 
 /* limit the Default and High Speed clock rates for debugging */
@@ -144,9 +144,9 @@ static_assert(SDHC_CONFIG_NUMOF < 3, "MCU supports only 2 SDHC peripherals");
 static_assert(SDHC_CONFIG_NUMOF < 2, "MCU supports only 1 SDHC peripheral");
 #endif
 
-XFA_CONST(sdmmc_devs, 0) sdmmc_dev_t * const _sdmmc_0 = (sdmmc_dev_t * const)&_sdhc_devs[0];
+XFA_CONST(sdmmc_dev_t * const, sdmmc_devs, 0) _sdmmc_0 = (sdmmc_dev_t * const)&_sdhc_devs[0];
 #if SDHC_CONFIG_NUMOF > 1
-XFA_CONST(sdmmc_devs, 0) sdmmc_dev_t * const _sdmmc_1 = (sdmmc_dev_t * const)&_sdhc_devs[1];
+XFA_CONST(sdmmc_dev_t * const, sdmmc_devs, 0) _sdmmc_1 = (sdmmc_dev_t * const)&_sdhc_devs[1];
 #endif
 
 static int _set_clock_rate(sdmmc_dev_t *dev, sdmmc_clock_rate_t rate);
@@ -295,7 +295,7 @@ static int _send_cmd(sdmmc_dev_t *dev, uint8_t cmd_idx, uint32_t arg,
         sdhc->BCR.reg = 0;
     }
 
-#if defined(MCU_SAMD5X) || defined(MCU_SAME5X)
+#if defined(CPU_SAMD5X) || defined(CPU_SAME5X)
     Sdhc *sam0_sdhc = (Sdhc *)sdhc;
     /* CMD0, CMD1, CMD2, CMD3 and CMD8 are broadcast commands */
     if ((cmd_idx <= SDMMC_CMD3) || (cmd_idx == SDMMC_CMD8)) {
@@ -422,7 +422,7 @@ static int _set_clock_rate(sdmmc_dev_t *dev, sdmmc_clock_rate_t rate)
     uint32_t base_clk = sdhc->CA0R.bit.BASECLKF;
     uint32_t clk_mult = sdhc->CA1R.bit.CLKMULT;
 
-#if defined(MCU_SAMD5X) || defined(MCU_SAME5X)
+#if defined(CPU_SAMD5X) || defined(CPU_SAME5X)
     /* if CA1R.CLKMULT is 0, programmable clock is not supported */
     assert(clk_mult);
     base_clk = (base_clk == 0) ? sam0_gclk_freq(SDHC_CLOCK) / 2 : MHZ(base_clk);
@@ -484,7 +484,7 @@ static int _xfer_prepare(sdmmc_dev_t *dev, sdmmc_xfer_desc_t *xfer)
     /* TODO: at the moment only 32-bit words supported */
     assert((xfer->block_size % sizeof(uint32_t)) == 0);
 
-    /* indicate that a data transfer is perpared */
+    /* indicate that a data transfer is prepared */
     sdhc_dev->data_transfer = true;
 
     uint32_t tmr;
@@ -512,10 +512,6 @@ static int _xfer_execute(sdmmc_dev_t *dev, sdmmc_xfer_desc_t *xfer,
 {
     assert(xfer);
     assert((xfer->write && data_wr) || (!xfer->write && data_rd));
-
-    /* check the alignment required for the buffers */
-    assert(HAS_ALIGNMENT_OF(data_wr, SDMMC_CPU_DMA_ALIGNMENT));
-    assert(HAS_ALIGNMENT_OF(data_rd, SDMMC_CPU_DMA_ALIGNMENT));
 
     sdhc_dev_t *sdhc_dev = container_of(dev, sdhc_dev_t, sdmmc_dev);
 
@@ -610,7 +606,7 @@ static int _xfer_finish(sdmmc_dev_t *dev, sdmmc_xfer_desc_t *xfer)
 }
 
 /* Internal functions */
-#if defined(MCU_SAMD5X) || defined(MCU_SAME5X)
+#if defined(CPU_SAMD5X) || defined(CPU_SAME5X)
 
 void _core_init(sdhc_dev_t *sdhc_dev)
 {
@@ -675,7 +671,7 @@ static void _init_pins(sdhc_dev_t *sdhc_dev)
     sdhc_dev->sdmmc_dev.bus_width = SDMMC_BUS_WIDTH_4BIT;
 }
 
-#endif /* defined(MCU_SAMD5X) || defined(MCU_SAME5X) */
+#endif /* defined(CPU_SAMD5X) || defined(CPU_SAME5X) */
 
 /**
  * @brief   Reset the entire SDHC peripheral or a part of it
@@ -744,11 +740,11 @@ static bool _wait_for_event(sdhc_dev_t *sdhc_dev,
 
     /* block IDLE so that the CPU clock does not stop */
 
-#if defined(MCU_SAMD5X) || defined(MCU_SAME5X)
+#if defined(CPU_SAMD5X) || defined(CPU_SAME5X)
     pm_block(SAM0_PM_IDLE);
 #endif
     mutex_lock(&sdhc_dev->irq_wait);
-#if defined(MCU_SAMD5X) || defined(MCU_SAME5X)
+#if defined(CPU_SAMD5X) || defined(CPU_SAME5X)
     pm_unblock(SAM0_PM_IDLE);
 #endif
 

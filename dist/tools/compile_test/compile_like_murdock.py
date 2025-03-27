@@ -49,7 +49,7 @@ _RATIOS = [
 ]
 
 DEFAULT_APPS = [
-    "examples/hello-world",
+    "examples/basic/hello-world",
     "tests/drivers/mtd_mapper",
     "tests/drivers/saul",
     "tests/pkg/tinyusb_cdc_msc",
@@ -92,6 +92,7 @@ DEFAULT_BOARDS = [
     'microbit',
     'mulle',
     'native',
+    'native64',
     'nrf52840dk',
     'nrf9160dk',
     'nucleo-f072rb',
@@ -119,7 +120,6 @@ DEFAULT_BOARDS = [
     'slwstk6220a',
     'stm32f723e-disco',
     'stm32mp157c-dk2',
-    'waspmote-pro',
     'waveshare-nrf52840-eval-kit',
     'weact-f401ce',
     'z1'

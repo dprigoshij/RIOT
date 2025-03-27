@@ -41,8 +41,9 @@
 #ifndef FMT_H
 #define FMT_H
 
-#include <stdint.h>
 #include <stddef.h>
+#include <stdint.h>
+#include <unistd.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -147,10 +148,13 @@ uint8_t fmt_hex_byte(const char *hex);
  *
  * The sequence of hex characters must have an even length:
  * 2 hex character => 1 byte. If the sequence of hex has an odd length, this
- * function returns 0 and an empty @p out.
+ * function returns 0 and does not write to @p out.
  *
  * The hex characters sequence must contain valid hexadecimal characters
  * otherwise the result in @p out is undefined.
+ *
+ * If @p out is NULL, will only return the number of bytes that would have
+ * been written.
  *
  * @param[out] out  Pointer to converted bytes, or NULL
  * @param[in]  hex  Pointer to input buffer
@@ -202,6 +206,19 @@ size_t fmt_u32_hex(char *out, uint32_t val);
 size_t fmt_u64_hex(char *out, uint64_t val);
 
 /**
+ * @brief Convert a uint16 value to decimal string.
+ *
+ * If @p out is NULL, will only return the number of characters that would have
+ * been written.
+ *
+ * @param[out]  out  Pointer to output buffer, or NULL
+ * @param[in]   val  Value to convert
+ *
+ * @return      nr of characters written to (or needed in) @p out
+ */
+size_t fmt_u16_dec(char *out, uint16_t val);
+
+/**
  * @brief Convert a uint32 value to decimal string.
  *
  * If @p out is NULL, will only return the number of characters that would have
@@ -228,19 +245,6 @@ size_t fmt_u32_dec(char *out, uint32_t val);
  * @return      nr of characters written to (or needed in) @p out
  */
 size_t fmt_u64_dec(char *out, uint64_t val);
-
-/**
- * @brief Convert a uint16 value to decimal string.
- *
- * If @p out is NULL, will only return the number of characters that would have
- * been written.
- *
- * @param[out]  out  Pointer to output buffer, or NULL
- * @param[in]   val  Value to convert
- *
- * @return      nr of characters written to (or needed in) @p out
- */
-size_t fmt_u16_dec(char *out, uint16_t val);
 
 /**
  * @brief Convert a int64 value to decimal string.
@@ -390,8 +394,13 @@ size_t fmt_str(char *out, const char *str);
 /**
  * @brief   Copy null-terminated string to a lowercase string (excluding terminating \0)
  *
+ * If @p out is NULL, will only return the number of characters that would have
+ * been written.
+ *
  * @param[out]  out     Pointer to output buffer, or NULL
  * @param[in]   str     Pointer to null-terminated source string
+ *
+ * @return      nr of characters written to (or needed in) @p out
  */
 size_t fmt_to_lower(char *out, const char *str);
 
@@ -418,6 +427,33 @@ uint32_t scn_u32_dec(const char *str, size_t n);
  * @return  converted uint32_t value
  */
 uint32_t scn_u32_hex(const char *str, size_t n);
+
+/**
+ * @brief   Convert a hex to binary
+ *
+ * @param[out]  dest        Destination buffer to write to
+ * @param[in]   dest_len    Size of @p dest in bytes
+ * @param[in]   hex         Hex string to convert
+ * @param[in]   hex_len     Length of @p hex in bytes
+ *
+ * @return  Number of bytes written
+ * @retval  -EINVAL     @p hex_len is odd or @p hex contains non-hex chars
+ * @retval  -EOVERFLOW  Destination to small
+ *
+ * @pre     If @p dest_len is > 0, @p dest is not a null pointer
+ * @pre     If @p hex_len is > 0, @p hex is not a null pointer
+ *
+ * Examples
+ * ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~{.c}
+ * const char *hex = "deadbeef";
+ * uint8_t binary[sizeof(hex) / 2];
+ * ssize_t len = scn_buf_hex(binary, sizeof(binary), hex, strlen(hex));
+ * if (len >= 0) {
+ *     make_use_of(binary, len);
+ * }
+ * ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ */
+ssize_t scn_buf_hex(void *dest, size_t dest_len, const char *hex, size_t hex_len);
 
 /**
  * @brief Print string to stdout

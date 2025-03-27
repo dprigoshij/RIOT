@@ -40,9 +40,17 @@ changes will be lost when a new ASF release is going to be used.
 
 Many of the header files where generated with an outdated version of SVDConv
 that adds the `__I` qualifier to anonymous bit fields, which `clang++` won't
-compile. Run the script `fix_cxx_compat.sh` in this directory whenever you
+compile. Run the script `fix_headers.sh` in this directory whenever you
 add or update vendor header filers until Microchips starts using a fixed version
 of SVDConv.
+
+### compatibility with tinyDTLS and `<endian.h>`
+
+Both tinyDTLS as well as `<endian.h>` expect `LITTLE_ENDIAN` to be a magic
+number to compare the byte order (as provided by the compiler) against. The
+vendor header files provide the macro with the wrong magic number without
+ever using this macro. We can just strip using the `fix_headers.sh` script
+in this directory.
 
 ### sam0.h
 
@@ -63,6 +71,27 @@ RIOT. The files are copied unmodified.
 ## SAMD21 files
 
 samd21: `Atmel.SAMD21_DFP.1.3.395.atpack`
+
+Each atpack has an include subdirectory with the files we copy into
+RIOT. The files are copied unmodified.
+
+## SAMD51 files
+
+samd51: `Atmel.SAMD51_DFP.1.1.96.atpack`
+
+Each atpack has an include subdirectory with the files we copy into
+RIOT. The files are copied unmodified.
+
+## SAME51 files
+
+same51: `Atmel.SAME51_DFP.1.1.139.atpack`
+
+Each atpack has an include subdirectory with the files we copy into
+RIOT. The files are copied unmodified.
+
+## SAME54 files
+
+same54: `Atmel.SAME54_DFP.1.0.87.atpack`
 
 Each atpack has an include subdirectory with the files we copy into
 RIOT. The files are copied unmodified.

@@ -34,7 +34,12 @@ will also be fine - however, we rely on users to report bugs regarding tooling i
 here. So expect occasional issues for the development branch and please help testing during the
 feature freeze period, if you develop on macOS or BSD.
 
-Native development on Windows and macOS machines is not officially supported. What works well is using Linux
+Windows users can refer to [this guide][dev-setup-windows] to
+[setup the development environment][dev-setup-windows] on Windows.
+
+[dev-setup-windows]: https://github.com/RIOT-OS/RIOT/tree/master/doc/guides/setup-windows
+
+Native development on macOS machines is not officially supported. What works well is using Linux
 in a virtual machine, but at much lower performance than running Linux natively. We also offer Docker images.
 For development on Windows, using the
 [Windows Subsystem for Linux (WSL)](https://en.wikipedia.org/wiki/Windows_Subsystem_for_Linux)
@@ -202,7 +207,8 @@ Building and executing an example           {#building-and-executing-an-example}
 ---------------------------------
 RIOT provides a number of examples in the `examples/` directory. Every example
 has a README that documents its usage and its purpose. You can build them by
-typing
+opening a shell, navigating to an example (e.g. `examples/basic/default`), and
+running:
 
 ~~~~~~~~ {.sh}
 make BOARD=samr21-xpro
@@ -214,9 +220,7 @@ or
 make all BOARD=samr21-xpro
 ~~~~~~~~
 
-into your shell.
-
-To flash the application to a board just type
+To flash the application to a board just run:
 
 ~~~~~~~~ {.sh}
 make flash BOARD=samr21-xpro
@@ -235,6 +239,16 @@ serial interface:
 make term BOARD=samr21-xpro PORT=/dev/ttyACM1
 ~~~~~~~~
 
+For flashing and accessing the board via the serial interface, the current user
+needs to have the correct access rights on the serial device.
+The easiest way to ensure this is to add the current user to the group that is
+owning the serial device. For example, this can be achieved on Linux by issuing
+the following line, logging out and logging in again:
+
+~~~~~~~~ {.sh}
+sudo usermod -aG $(stat --format="%G" /dev/ttyACM0) $USER
+~~~~~~~~
+
 Note that the `PORT` macro has a slightly different semantic in `native`. Here
 it is used to provide the name of the TAP interface you want to use for the
 virtualized networking capabilities of RIOT.
@@ -244,7 +258,7 @@ the `dist/tools/pyterm/` directory. If you choose to use another terminal
 program you can set `TERMPROG` (and if need be the `TERMFLAGS`) macros:
 
 ~~~~~~~~ {.sh}
-make -C examples/gnrc_networking/ term \
+make -C examples/networking/gnrc/gnrc_networking/ term \
     BOARD=samr21-xpro \
     TERMPROG=gtkterm \
     TERMFLAGS="-s 115200 -p /dev/ttyACM0 -e"
@@ -321,7 +335,7 @@ Usage
 
 The RIOT build system provides support for using the Docker container to build RIOT projects, so you do not need to type the long docker command line every time:
 
-(**from the directory you would normally run make, e.g. examples/default**)
+(**from the directory you would normally run make, e.g. examples/basic/default**)
 
 ```console
 $ make BUILD_IN_DOCKER=1
@@ -389,4 +403,4 @@ To create a bridge and two (or `count` at your option) tap interfaces:
     sudo ./dist/tools/tapsetup/tapsetup [-c [<count>]]
 ~~~~~~~
 
-A detailed example can be found in `examples/gnrc_networking`.
+A detailed example can be found in `examples/networking/gnrc/gnrc_networking`.

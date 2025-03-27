@@ -7,15 +7,11 @@
  */
 
 /**
- * @ingroup     cpu_native
- * @ingroup     drivers_spidev_linux
- * @{
- *
  * @file
- * @brief       Implementation of SPI access from Linux User Space
- *
- * @author      Frank Hessel <frank@fhessel.de>
- * @}
+ * @ingroup cpu_native
+ * @ingroup drivers_spidev_linux
+ * @brief   Implementation of SPI access from Linux User Space
+ * @author  Frank Hessel <frank@fhessel.de>
  */
 
 #ifdef MODULE_PERIPH_SPIDEV_LINUX
@@ -320,7 +316,7 @@ void spi_transfer_bytes(spi_t bus, spi_cs_t cs, bool cont,
         DEBUG("spi_transfer_bytes: ioctl failed\n");
     }
     else {
-        DEBUG("spi_transfer_bytes: transferred %u bytes\n", len);
+        DEBUG("spi_transfer_bytes: transferred %zu bytes\n", len);
     }
 
 #ifdef MODULE_PERIPH_GPIO

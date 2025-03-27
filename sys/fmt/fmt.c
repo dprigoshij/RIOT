@@ -19,15 +19,18 @@
  */
 
 #include <assert.h>
-#include <stdarg.h>
+#include <errno.h>
+#include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <string.h>
 #include <unistd.h>
 
-#include "kernel_defines.h"
+#include "container.h"
 #include "fmt.h"
-#include "stdio_base.h"
+#include "modules.h"
+
+extern ssize_t stdio_write(const void* buffer, size_t len);
 
 static const char _hex_chars[16] = "0123456789ABCDEF";
 
@@ -85,6 +88,19 @@ size_t fmt_bytes_hex(char *out, const uint8_t *ptr, size_t n)
     return len;
 }
 
+size_t fmt_bytes_hex_reverse(char *out, const uint8_t *ptr, size_t n)
+{
+    size_t len = n * 2;
+
+    if (out) {
+        while (n--) {
+            out += fmt_byte_hex(out, ptr[n]);
+        }
+    }
+
+    return len;
+}
+
 size_t fmt_strlen(const char *str)
 {
     const char *tmp = str;
@@ -120,16 +136,6 @@ size_t fmt_str(char *out, const char *str)
         }
     }
     return len;
-}
-
-size_t fmt_bytes_hex_reverse(char *out, const uint8_t *ptr, size_t n)
-{
-    size_t i = n;
-
-    while (i--) {
-        out += fmt_byte_hex(out, ptr[i]);
-    }
-    return (n << 1);
 }
 
 static uint8_t _byte_mod25(uint8_t x)
@@ -506,6 +512,59 @@ uint32_t scn_u32_hex(const char *str, size_t n)
 
     }
     return res;
+}
+
+static bool _get_nibble(uint8_t *dest, char _c)
+{
+    uint8_t c = _c;
+    if (((uint8_t)'0' <= c) && (c <= (uint8_t)'9')) {
+        *dest = c - (uint8_t)'0';
+        return true;
+    }
+
+    if (((uint8_t)'a' <= c) && (c <= (uint8_t)'f')) {
+        *dest = c - (uint8_t)'a' + 10;
+        return true;
+    }
+
+    if (((uint8_t)'A' <= c) && (c <= (uint8_t)'F')) {
+        *dest = c - (uint8_t)'A' + 10;
+        return true;
+    }
+
+    return false;
+}
+
+ssize_t scn_buf_hex(void *_dest, size_t dest_len, const char *hex, size_t hex_len)
+{
+    uint8_t *dest = _dest;
+    assert((dest != NULL) || (dest_len == 0));
+    assert((hex != NULL) || (hex_len == 0));
+
+    if (hex_len & 1) {
+        /* we need to chars per every byte, so odd inputs don't work */
+        return -EINVAL;
+    }
+
+    size_t len = hex_len >> 1;
+    if (len > dest_len) {
+        return -EOVERFLOW;
+    }
+
+    for (size_t pos = 0; pos < len; pos++) {
+        uint8_t high, low;
+        if (!_get_nibble(&high, hex[pos << 1])) {
+            return -EINVAL;
+        }
+
+        if (!_get_nibble(&low, hex[(pos << 1) + 1])) {
+            return -EINVAL;
+        }
+
+        dest[pos] = (high << 4) | low;
+    }
+
+    return len;
 }
 
 /* native gets special treatment as native's stdio code is ... special.
