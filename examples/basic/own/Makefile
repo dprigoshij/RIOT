@@ -14,4 +14,17 @@ DEVELHELP ?= 1
 # Change this to 0 show compiler invocation lines by default:
 QUIET ?= 1
 
+USEMODULE+=xtimer
+USEMODULE+=periph_uart
+
+ifeq ($(TALKER),1)
+    CFLAGS += -DTALKER
+endif
+
+ifeq ($(LISTENER),1)
+    CFLAGS += -DLISTENER
+endif
+
+
+
 include $(RIOTBASE)/Makefile.include
